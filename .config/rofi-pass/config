@@ -1,3 +1,3 @@
-default_user=merlin.marek@posteo.net
+default_user=merlin.zerbe@posteo.net
 default_do=autotype
 help_color="#4872FF" # workaround for https://github.com/carnager/rofi-pass/issues/226
