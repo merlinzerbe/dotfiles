@@ -41,7 +41,7 @@ return {
       root_dir = lspconfig.util.root_pattern("*.csproj"),
     })
 
-    lspconfig["ruff_lsp"].setup({
+    lspconfig["ruff"].setup({
       capabilities = capabilities,
       on_attach = on_attach,
     })
@@ -143,9 +143,12 @@ return {
     -- we need to add this manually so that the lsp is properly attached
     vim.filetype.add({ extension = { typ = "typst" } })
     lspconfig["tinymist"].setup({
+      offset_encoding = "utf-8",
       capabilities = capabilities,
       on_attach = on_attach,
-      settings = {},
+      settings = {
+        exportPdf = "onSave",
+      },
       root_dir = function()
         return vim.fn.getcwd()
       end,
