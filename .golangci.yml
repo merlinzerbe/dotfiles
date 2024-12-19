@@ -2,8 +2,6 @@ linters:
   enable-all: true
   disable:
     # deprecated linters
-    - gomnd
-    - execinquery
     - exportloopref
 
     - gomodguard # flag go module dependencies based on allow/blocklist
