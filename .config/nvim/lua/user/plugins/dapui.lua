@@ -28,4 +28,22 @@ return {
       },
     },
   },
+  config = function()
+    local dap = require("dap")
+
+    dap.configurations.go = {
+      {
+        type = "delve",
+        name = "Debug",
+        request = "launch",
+        showLog = false,
+        program = "${file}",
+        dlvToolPath = vim.fn.exepath("dlv"),
+        args = function()
+          local args_string = vim.fn.input("Arguments: ")
+          return vim.split(args_string, " +")
+        end,
+      },
+    }
+  end,
 }
