@@ -6,6 +6,7 @@ linters:
 
     - gomodguard # flag go module dependencies based on allow/blocklist
     - gomoddirectives # flag go module directives
+    - depguard # flag dependencies based on allow/blocklist
 
 linters-settings:
   mnd:
