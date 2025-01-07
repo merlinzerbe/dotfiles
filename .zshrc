@@ -187,8 +187,8 @@ precmd() {
 	# 	fi
 	# fi
 	if [[ -v SSH_CLIENT ]]; then
-		PROMPT+=" %{$fg[blue]%}@`hostname | head -c 2`%{$reset_color%}"
-		print -Pn "\e]0;%~ @`hostname | head -c 2`\a"
+		PROMPT+=" %{$fg[blue]%}@`hostnamectl hostname | head -c 2`%{$reset_color%}"
+		print -Pn "\e]0;%~ @`hostnamectl hostname | head -c 2`\a"
 	else
 		print -Pn "\e]0;%~\a"
 	fi
