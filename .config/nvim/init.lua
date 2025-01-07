@@ -126,4 +126,7 @@ watch_colorscheme()
 
 vim.cmd("set spelllang=de")
 
-require("local")
+local local_file = vim.fn.stdpath("config") .. "/lua/local.lua"
+if vim.fn.filereadable(local_file) == 1 then
+  require("local")
+end
