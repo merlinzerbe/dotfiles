@@ -2,23 +2,49 @@ require("user.options")
 require("user.keymaps")
 require("user.lazy")
 
--- apply organize imports no save
-vim.api.nvim_create_autocmd("BufWritePre", {
+-- run golangci-lint after saving go files
+vim.api.nvim_create_autocmd("BufWritePost", {
   pattern = "*.go",
   callback = function()
-    local params = vim.lsp.util.make_range_params()
-    params.context = { only = { "source.organizeImports" } }
-    local timeout_ms = 1000 -- increase if you have a large codebase
-    local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, timeout_ms)
-    for cid, res in pairs(result or {}) do
-      for _, r in pairs(res.result or {}) do
-        if r.edit then
-          local enc = (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or "utf-16"
-          vim.lsp.util.apply_workspace_edit(r.edit, enc)
-        end
+    local filename = vim.fn.expand("%:p")
+
+    -- run golangci-lint only on the current file with auto-fix
+    local output = vim.fn.systemlist(string.format("golangci-lint run --fix --fast --out-format json %s", filename))
+
+    -- we need to reload the file because `golangci-lint --fix` changes the file in-place
+    -- when reloading the file, the line on which the cursor was before the reload is centered so the view 'jumps'
+    -- to counter that, we restore the view after reloading the file
+    local view = vim.fn.winsaveview()
+    vim.cmd("edit")
+    vim.fn.winrestview(view)
+
+    -- TODO: to get more diagnostics here without freezing the ui we could run golangci-lint without --fast here asynchronously and the show the returned diagnostics. if the user saves againg while this command is running, we abort it.
+
+    -- parse the output of golangci-lint
+    local success, lint_data = pcall(vim.fn.json_decode, table.concat(output, "\n"))
+    if not success then
+      vim.notify("failed to parse golangci-lint output", vim.log.levels.ERROR)
+      return
+    end
+
+    -- show diagnostics
+    local diagnostics = {}
+
+    if lint_data and lint_data.Issues then
+      for _, issue in ipairs(lint_data.Issues) do
+        table.insert(diagnostics, {
+          lnum = issue.Pos.Line - 1, -- nvim uses 0-based indexing
+          col = issue.Pos.Column - 1, -- nvim uses 0-based indexing
+          severity = vim.diagnostic.severity.WARN,
+          message = issue.Text,
+          source = issue.FromLinter,
+        })
       end
     end
-    vim.lsp.buf.format({ async = false })
+
+    local namespace = vim.api.nvim_create_namespace("golangci-lint")
+
+    vim.diagnostic.set(namespace, 0, diagnostics)
   end,
 })
 

@@ -3,7 +3,6 @@ return {
   event = { "BufReadPre", "BufNewFile" },
   dependencies = {
     "hrsh7th/cmp-nvim-lsp",
-    { "antosha417/nvim-lsp-file-operations", config = true },
   },
   config = function()
     local lspconfig = require("lspconfig")
@@ -31,16 +30,6 @@ return {
 
     local capabilities = cmp_nvim_lsp.default_capabilities()
 
-    lspconfig["omnisharp"].setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
-      cmd = { "dotnet", vim.fn.stdpath("data") .. "/mason/packages/omnisharp/libexec/OmniSharp.dll" },
-      enable_import_completion = true,
-      organize_imports_on_format = true,
-      enable_roslyn_analyzers = true,
-      root_dir = lspconfig.util.root_pattern("*.csproj"),
-    })
-
     lspconfig["ruff"].setup({
       capabilities = capabilities,
       on_attach = on_attach,
@@ -51,9 +40,19 @@ return {
       on_attach = on_attach,
     })
 
-    lspconfig["golangci_lint_ls"].setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
+    local null_ls = require("null-ls")
+
+    null_ls.setup({
+      sources = {
+        -- runs goimports and then formats while shortening long lines
+        null_ls.builtins.formatting.golines,
+
+        -- gofumpt does stricter formatting than gofmt
+        -- unfortunately we cannot use it as a base formatter for golines
+        -- https://github.com/segmentio/golines/issues/100
+        -- so we run it afterwards and format the file twice
+        null_ls.builtins.formatting.gofumpt,
+      },
     })
 
     lspconfig["pyright"].setup({
@@ -129,7 +128,7 @@ return {
         },
       },
       on_attach = function(client, bufnr)
-        local active_clients = vim.lsp.get_active_clients()
+        local active_clients = vim.lsp.get_clients()
         for _, active_client in pairs(active_clients) do
           -- stop tsserver if denols is active
           if active_client.name == "ts_ls" then
