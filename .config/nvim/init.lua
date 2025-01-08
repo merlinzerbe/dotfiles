@@ -1,73 +1,97 @@
-require("user.options")
-require("user.keymaps")
-require("user.lazy")
+-- options
+vim.opt.clipboard = "unnamedplus" -- use the system clipboard
+vim.opt.showcmd = false           -- do not show partial commands
+vim.opt.showmode = false          -- do not show the current mode
+vim.opt.number = true             -- show line numbers
+vim.opt.linebreak = true          -- do not split words when wrapping
+vim.opt.lazyredraw = true         -- do not update screen while executing macros
+vim.opt.shiftround = true         -- round indent to multiple of shiftwidth
+vim.opt.ignorecase = true         -- ignore case when searching...
+vim.opt.smartcase = true          -- ... except when capital letters are used
+vim.opt.swapfile = false          -- do not create swapfiles
+vim.opt.undofile = true           -- create undo files
+vim.opt.pumheight = 20            -- use 20 lines in the popupmenu at maximum
+vim.opt.expandtab = true          -- insert spaces when pressing tab
+vim.opt.tabstop = 2               -- use 2 spaces for a tab
+vim.opt.shiftwidth = 0            -- use whatever tabstop is
+vim.opt.softtabstop = -1          -- use whatever shiftwidth is
+-- if splitright is set, step into while debugging does not jump to the function
+-- vim.opt.splitright = true         -- more intuitive split positions
+vim.opt.splitbelow = true      -- more intuitive split positions
+vim.opt.mouse = ""             -- allow select and copy from vim via mouse
+vim.opt.shortmess:append("cI") -- do not show intro on startup
+vim.opt.laststatus = 1         -- only show statusline if there are multiple windows
+vim.opt.inccommand = "nosplit" -- highlight matched words when typing substitution commands
+vim.opt.scrolloff = 5          -- keep lines above and below the cursor while scrolling
+vim.opt.foldlevelstart = 99    -- expand all folds on start
+vim.opt.updatetime = 100       -- check if the file has been changed externally more often
+vim.opt.signcolumn = "number"  -- show signs in number column
+vim.opt.termguicolors = false  -- use cterm attributes instead of gui attributes for color scheme
+vim.g.syntax = false           -- disable regex based syntax highlighting, use treesitter instead
 
--- run golangci-lint after saving go files
-vim.api.nvim_create_autocmd("BufWritePost", {
-  pattern = "*.go",
-  callback = function()
-    local filename = vim.fn.expand("%:p")
+vim.cmd("set spelllang=de")
 
-    -- run golangci-lint only on the current file with auto-fix
-    local output = vim.fn.systemlist(string.format("golangci-lint run --fix --fast --out-format json %s", filename))
-
-    -- we need to reload the file because `golangci-lint --fix` changes the file in-place
-    -- when reloading the file, the line on which the cursor was before the reload is centered so the view 'jumps'
-    -- to counter that, we restore the view after reloading the file
-    local view = vim.fn.winsaveview()
-    vim.cmd("edit")
-    vim.fn.winrestview(view)
-
-    -- TODO: to get more diagnostics here without freezing the ui we could run golangci-lint without --fast here asynchronously and the show the returned diagnostics. if the user saves againg while this command is running, we abort it.
-
-    -- parse the output of golangci-lint
-    local success, lint_data = pcall(vim.fn.json_decode, table.concat(output, "\n"))
-    if not success then
-      vim.notify("failed to parse golangci-lint output", vim.log.levels.ERROR)
-      return
-    end
-
-    -- show diagnostics
-    local diagnostics = {}
-
-    if lint_data and lint_data.Issues then
-      for _, issue in ipairs(lint_data.Issues) do
-        table.insert(diagnostics, {
-          lnum = issue.Pos.Line - 1, -- nvim uses 0-based indexing
-          col = issue.Pos.Column - 1, -- nvim uses 0-based indexing
-          severity = vim.diagnostic.severity.WARN,
-          message = issue.Text,
-          source = issue.FromLinter,
-        })
-      end
-    end
-
-    local namespace = vim.api.nvim_create_namespace("golangci-lint")
-
-    vim.diagnostic.set(namespace, 0, diagnostics)
-  end,
+-- do not use virtual text for diagnostics
+vim.diagnostic.config({
+  virtual_text = false,
+  signs = true,
+  float = {
+    source = true,
+  },
 })
 
--- return to the last edited line when reopening a file
-vim.api.nvim_create_autocmd("BufRead", {
-  callback = function(opts)
-    vim.api.nvim_create_autocmd("BufWinEnter", {
-      once = true,
-      buffer = opts.buf,
-      callback = function()
-        local ft = vim.bo[opts.buf].filetype
-        local last_known_line = vim.api.nvim_buf_get_mark(opts.buf, '"')[1]
-        if
-          not (ft:match("commit") and ft:match("rebase"))
-          and last_known_line > 1
-          and last_known_line <= vim.api.nvim_buf_line_count(opts.buf)
-        then
-          vim.api.nvim_feedkeys([[g`"]], "nx", false)
-        end
-      end,
-    })
-  end,
-})
+-- keybindings
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
+
+local nore = { noremap = true }
+local k = vim.keymap.set
+
+-- general
+k({ "n", "v" }, "<space>", "<nop>", { silent = true })
+k("n", "<leader>ve", ":edit $MYVIMRC<cr>", nore)
+k("n", "<leader>w", ":write<cr>", nore)
+k("n", "<leader>q", ":quit<cr>", nore)
+k("n", "<leader>x", ":write | quit<cr>", nore)
+k("n", "<leader><leader>", "<c-^>", nore) -- switch to previous buffer
+k("n", "<leader>i", ":Inspect<cr>", nore)
+k("n", "<leader>l", ":Telescope highlights<cr>", nore)
+k("n", "s", ":luafile %<cr>", nore)
+
+-- lsp
+k("n", "ge", vim.diagnostic.goto_prev, nore)
+k("n", "gE", vim.diagnostic.goto_next, nore)
+k("n", "<leader>e", vim.diagnostic.open_float, nore)
+k("n", "<leader>d", vim.diagnostic.setloclist, nore)
+k("n", "<leader>j", ":nohlsearch<cr>", nore) -- remove current search highlighting
+
+-- debugging
+k("n", "<f4>", function()
+  require("dap").terminate()
+end)
+k("n", "<f5>", function()
+  require("dap").continue()
+end)
+k("n", "<f6>", function()
+  require("dap").step_over()
+end)
+k("n", "<f7>", function()
+  require("dap").step_into()
+end)
+
+-- move on visual lines
+k({ "n", "x" }, "k", "gk", { silent = true })
+k({ "n", "x" }, "j", "gj", { silent = true })
+
+-- easier movement between windows
+k("n", "<c-j>", "<c-w>j", nore)
+k("n", "<c-k>", "<c-w>k", nore)
+k("n", "<c-l>", "<c-w>l", nore)
+k("n", "<c-h>", "<c-w>h", nore)
+
+-- go to first non-whitespace character when pressing 0
+k("n", "0", "^", nore)
+k("n", "^", "0", nore)
 
 -- do not yank when pasting over visual selection
 vim.cmd("xnoremap <expr> p '\"_d\"'.v:register.'P'")
@@ -124,9 +148,487 @@ end
 
 watch_colorscheme()
 
-vim.cmd("set spelllang=de")
+-- dirvish
+vim.api.nvim_command("autocmd FileType dirvish nmap <buffer> <esc> gq")
+vim.api.nvim_command("autocmd FileType dirvish nmap <buffer> <leader>q gq")
 
-local local_file = vim.fn.stdpath("config") .. "/lua/local.lua"
+-- run golangci-lint after saving go files
+vim.api.nvim_create_autocmd("BufWritePost", {
+  pattern = "*.go",
+  callback = function()
+    local filename = vim.fn.expand("%:p")
+
+    -- run golangci-lint only on the current file with auto-fix
+    local output = vim.fn.systemlist(string.format("golangci-lint run --fix --fast --out-format json %s", filename))
+
+    -- we need to reload the file because `golangci-lint --fix` changes the file in-place
+    -- when reloading the file, the line on which the cursor was before the reload is centered so the view 'jumps'
+    -- to counter that, we restore the view after reloading the file
+    local view = vim.fn.winsaveview()
+    vim.cmd("edit")
+    vim.fn.winrestview(view)
+
+    -- TODO: to get more diagnostics here without freezing the ui we could run golangci-lint without --fast here asynchronously and the show the returned diagnostics. if the user saves againg while this command is running, we abort it.
+
+    -- parse the output of golangci-lint
+    local success, lint_data = pcall(vim.fn.json_decode, table.concat(output, "\n"))
+    if not success then
+      vim.notify("failed to parse golangci-lint output", vim.log.levels.ERROR)
+      return
+    end
+
+    -- show diagnostics
+    local diagnostics = {}
+
+    if lint_data and lint_data.Issues then
+      for _, issue in ipairs(lint_data.Issues) do
+        table.insert(diagnostics, {
+          lnum = issue.Pos.Line - 1,  -- nvim uses 0-based indexing
+          col = issue.Pos.Column - 1, -- nvim uses 0-based indexing
+          severity = vim.diagnostic.severity.WARN,
+          message = issue.Text,
+          source = issue.FromLinter,
+        })
+      end
+    end
+
+    local namespace = vim.api.nvim_create_namespace("golangci-lint")
+
+    vim.diagnostic.set(namespace, 0, diagnostics)
+  end,
+})
+
+-- return to the last edited line when reopening a file
+vim.api.nvim_create_autocmd("BufRead", {
+  callback = function(opts)
+    vim.api.nvim_create_autocmd("BufWinEnter", {
+      once = true,
+      buffer = opts.buf,
+      callback = function()
+        local ft = vim.bo[opts.buf].filetype
+        local last_known_line = vim.api.nvim_buf_get_mark(opts.buf, '"')[1]
+        if
+            not (ft:match("commit") and ft:match("rebase"))
+            and last_known_line > 1
+            and last_known_line <= vim.api.nvim_buf_line_count(opts.buf)
+        then
+          vim.api.nvim_feedkeys([[g`"]], "nx", false)
+        end
+      end,
+    })
+  end,
+})
+
+-- plugins
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable", -- latest stable release
+    lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
+
+local mason_tool_installer_spec = {
+  "WhoIsSethDaniel/mason-tool-installer.nvim",
+  config = function()
+    require("mason-tool-installer").setup({
+      ensure_installed = {
+        "golines",
+        "gofumpt",
+        "golangci-lint",
+      },
+    })
+  end,
+}
+
+local mason_spec = {
+  "williamboman/mason.nvim",
+  dependencies = {
+    "williamboman/mason-lspconfig.nvim",
+  },
+  config = function()
+    local mason = require("mason")
+    local mason_lspconfig = require("mason-lspconfig")
+
+    mason.setup({})
+
+    mason_lspconfig.setup({
+      ensure_installed = {
+        "gopls",
+        "lua_ls",
+        "pyright",
+        "volar",
+        "ts_ls",
+        "templ",
+        "html",
+        "emmet_language_server",
+        "svelte",
+        "ruff",
+        "denols",
+        "omnisharp",
+        "tinymist",
+      },
+    })
+  end,
+}
+
+local cmp_spec = {
+  "hrsh7th/nvim-cmp",
+  dependencies = {
+    -- snippet engine and corresponding nvim-cmp source
+    "L3MON4D3/LuaSnip",
+    "saadparwaiz1/cmp_luasnip",
+
+    -- add completions from lsp
+    "hrsh7th/cmp-nvim-lsp",
+
+    -- add buffer words completions
+    "hrsh7th/cmp-buffer",
+  },
+  config = function()
+    local cmp = require("cmp")
+    local luasnip = require("luasnip")
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
+    capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
+
+    vim.opt.completeopt = "menu,menuone,noinsert"
+
+    cmp.setup({
+      snippet = {
+        expand = function(args)
+          luasnip.lsp_expand(args.body)
+        end,
+      },
+      ---@diagnostic disable-next-line: missing-fields
+      completion = {
+        completeopt = "menu,menuone,noinsert",
+      },
+      mapping = cmp.mapping.preset.insert({
+        ["<c-space>"] = cmp.mapping.complete(),
+        ["<cr>"] = cmp.mapping.confirm({
+          behavior = cmp.ConfirmBehavior.Replace,
+          select = true,
+        }),
+      }),
+      sources = {
+        { name = "nvim_lsp" },
+        { name = "luasnip" },
+        { name = "buffer" },
+      },
+    })
+  end,
+}
+
+local treesitter_spec = {
+  -- highlight, edit, and navigate code
+  "nvim-treesitter/nvim-treesitter",
+  dependencies = {
+    "nvim-treesitter/nvim-treesitter-textobjects",
+    "JoosepAlviste/nvim-ts-context-commentstring", -- set the commentstring based on location in the file
+  },
+  build = ":TSUpdate",
+  config = function()
+    ---@diagnostic disable-next-line: missing-fields
+    require("nvim-treesitter.configs").setup({
+      textobjects = {
+        select = {
+          enable = true,
+          lookahead = true,
+          keymaps = {
+            ["af"] = "@function.outer",
+            ["if"] = "@function.inner",
+          },
+        },
+      },
+      highlight = {
+        enable = "true",
+      },
+      ensure_installed = {
+        "go",
+        "lua",
+        "javascript",
+        "typescript",
+        "tsx",
+        "vue",
+        "rust",
+        "svelte",
+        "templ",
+      },
+      ts_context_commentstring = {
+        enable = true,
+      },
+    })
+  end,
+}
+
+local lspconfig_spec = {
+  "neovim/nvim-lspconfig",
+  event = { "BufReadPre", "BufNewFile" },
+  dependencies = {
+    "nvimtools/none-ls.nvim",
+    "nvim-telescope/telescope.nvim",
+  },
+
+  config = function()
+    local lspconfig = require("lspconfig")
+    local cmp_nvim_lsp = require("cmp_nvim_lsp")
+
+    local on_attach = function(client, bufnr)
+      local nmap = function(keys, func, desc)
+        if desc then
+          desc = "LSP: " .. desc
+        end
+
+        vim.keymap.set("n", keys, func, { buffer = bufnr, desc = desc })
+      end
+
+      nmap("<leader>r", vim.lsp.buf.rename)
+      nmap("<leader>a", vim.lsp.buf.code_action)
+      vim.keymap.set("v", "<leader>a", vim.lsp.buf.code_action, { buffer = bufnr })
+      nmap("<leader>e", vim.lsp.buf.hover)
+      nmap("gD", vim.lsp.buf.declaration)
+      nmap("gd", require("telescope.builtin").lsp_definitions)
+      nmap("gr", require("telescope.builtin").lsp_references)
+      nmap("gi", require("telescope.builtin").lsp_implementations)
+      nmap("gy", require("telescope.builtin").lsp_type_definitions)
+    end
+
+    local capabilities = cmp_nvim_lsp.default_capabilities()
+
+    lspconfig["ruff"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+
+    lspconfig["gopls"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+
+    local null_ls = require("null-ls")
+
+    null_ls.setup({
+      sources = {
+        -- format typescript/html/css/vue
+        null_ls.builtins.formatting.prettierd,
+
+        -- format lua files
+        null_ls.builtins.formatting.stylua,
+
+        -- runs goimports and then formats while shortening long lines
+        null_ls.builtins.formatting.golines,
+
+        -- gofumpt does stricter formatting than gofmt
+        -- unfortunately we cannot use it as a base formatter for golines
+        -- https://github.com/segmentio/golines/issues/100
+        -- so we run it afterwards and format the file twice
+        null_ls.builtins.formatting.gofumpt,
+      },
+      on_attach = function(client, bufnr)
+        if client.supports_method("textDocument/formatting") then
+          vim.api.nvim_create_autocmd("BufWritePre", {
+            buffer = bufnr,
+            callback = function()
+              vim.lsp.buf.format()
+            end,
+          })
+        end
+      end,
+    })
+
+    lspconfig["pyright"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+
+    local mason_registry = require("mason-registry")
+    local vue_language_server_path = mason_registry.get_package("vue-language-server"):get_install_path()
+        .. "/node_modules/@vue/language-server"
+
+    lspconfig["ts_ls"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+      init_options = {
+        plugins = {
+          {
+            name = "@vue/typescript-plugin",
+            location = vue_language_server_path,
+            languages = { "vue" },
+          },
+        },
+      },
+      filetypes = {
+        "typescript",
+        "typescriptreact",
+        "javascript",
+        "vue",
+      },
+    })
+
+    lspconfig["volar"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+
+    lspconfig["html"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+      filetypes = { "html", "templ" },
+    })
+
+    lspconfig["svelte"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+
+    lspconfig["emmet_language_server"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+      filetypes = { "html", "templ" },
+    })
+
+    vim.filetype.add({ extension = { templ = "templ" } })
+    lspconfig["templ"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+
+    lspconfig["denols"].setup({
+      root_dir = lspconfig.util.root_pattern("deno.json", "deno.jsonc"),
+      init_options = {
+        lint = true,
+        unstable = true,
+        suggest = {
+          imports = {
+            hosts = {
+              ["https://deno.land"] = true,
+              ["https://cdn.nest.land"] = true,
+              ["https://crux.land"] = true,
+            },
+          },
+        },
+      },
+      on_attach = function(client, bufnr)
+        local active_clients = vim.lsp.get_clients()
+        for _, active_client in pairs(active_clients) do
+          -- stop tsserver if denols is active
+          if active_client.name == "ts_ls" then
+            active_client.stop()
+          end
+        end
+        on_attach(client, bufnr)
+      end,
+    })
+
+    -- vim detects .typ files as sql
+    -- we need to add this manually so that the lsp is properly attached
+    vim.filetype.add({ extension = { typ = "typst" } })
+    lspconfig["tinymist"].setup({
+      offset_encoding = "utf-8",
+      capabilities = capabilities,
+      on_attach = on_attach,
+      settings = {
+        exportPdf = "onSave",
+      },
+      root_dir = function()
+        return vim.fn.getcwd()
+      end,
+      single_file_support = true,
+    })
+
+    lspconfig["lua_ls"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+      settings = {
+        Lua = {
+          -- make the language server recognize the "vim" global
+          diagnostics = {
+            globals = {
+              "vim",
+            },
+          },
+          workspace = {
+            -- make the languages server aware of runtime files
+            library = {
+              [vim.fn.expand("$VIMRUNTIME/lua")] = true,
+              [vim.fn.stdpath("config") .. "/lua"] = true,
+            },
+          },
+        },
+      },
+    })
+  end,
+}
+
+local telescope_spec = {
+  "nvim-telescope/telescope.nvim",
+  branch = "0.1.x",
+  dependencies = {
+    "nvim-lua/plenary.nvim",
+    { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+    "nvim-tree/nvim-web-devicons",
+  },
+  config = function()
+    local telescope = require("telescope")
+    local actions = require("telescope.actions")
+    telescope.setup({
+      defaults = {
+        sorting_strategy = "ascending",
+        layout_config = {
+          prompt_position = "top",
+        },
+        mappings = {
+          i = {
+            ["<esc>"] = actions.close,
+          },
+        },
+      },
+    })
+
+    telescope.load_extension("fzf")
+
+    vim.keymap.set("n", "<leader>h", require("telescope.builtin").oldfiles)
+    vim.keymap.set("n", "<leader>b", require("telescope.builtin").buffers)
+    vim.keymap.set("n", "<leader>f", require("telescope.builtin").find_files)
+    vim.keymap.set("n", "<leader>g", require("telescope.builtin").live_grep)
+    vim.keymap.set("n", "<leader>p", require("telescope.builtin").commands)
+    vim.keymap.set("n", "<leader>sd", require("telescope.builtin").diagnostics)
+    vim.keymap.set("n", "<leader>sr", require("telescope.builtin").resume)
+  end,
+}
+
+local markdown_preview_spec = {
+  -- preview markdown files
+  "iamcco/markdown-preview.nvim",
+  cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+  ft = { "markdown" },
+  build = function()
+    vim.fn["mkdp#util#install"]()
+  end,
+}
+
+require("lazy").setup({
+  mason_spec,
+  mason_tool_installer_spec,
+  cmp_spec,
+  lspconfig_spec,
+  treesitter_spec,
+  markdown_preview_spec,
+  telescope_spec,
+  "justinmk/vim-dirvish",
+  "folke/neodev.nvim",
+}, {
+  change_detection = {
+    notify = false,
+  },
+})
+
+local local_file = vim.fn.stdpath("config") .. "/local.lua"
 if vim.fn.filereadable(local_file) == 1 then
-  require("local")
+  dofile(local_file)
 end
