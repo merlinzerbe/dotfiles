@@ -51,10 +51,6 @@ bindsym $mod+Ctrl+8 move container to workspace number 8
 bindsym $mod+Ctrl+9 move container to workspace number 9
 bindsym $mod+Ctrl+10 move container to workspace number 10
 
-bindsym $mod+Ctrl+a move scratchpad
-bindsym $mod+a scratchpad show
-
-bindsym $mod+Ctrl+c reload
 bindsym $mod+Ctrl+r restart
 bindsym $mod+Ctrl+e exit
 
@@ -75,7 +71,7 @@ client.focused_inactive  #333333 #222222 #888888 #292d2e #222222
 # rename windows
 bindsym $mod+r exec i3-msg title_format `zenity --title "set window title" --text "" --entry`
 
-# jump to names windows using rofi
+# jump to named windows using rofi
 bindsym $mod+i exec ~/.bin/rofi-select-window
 
 # audio
@@ -83,10 +79,6 @@ bindsym XF86AudioRaiseVolume exec amixer -q sset Master 1%+
 bindsym XF86AudioLowerVolume exec amixer -q sset Master 1%-
 
 bindsym XF86AudioMute exec amixer set Master toggle
-
-# brightness
-bindsym XF86MonBrightnessDown exec xbacklight -dec 5
-bindsym XF86MonBrightnessUp exec xbacklight -inc 5
 
 # screenshots
 bindsym Print exec flameshot full -p /tmp
@@ -105,5 +97,5 @@ exec --no-startup-id dunst
 # faster key repeat
 exec_always --no-startup-id xset r rate 180 70
 
-# this should probably be somewhere else...
+# load custom keymap
 exec_always --no-startup-id xkbcomp -I$HOME/.config/xkb ~/.config/xkb/map $DISPLAY

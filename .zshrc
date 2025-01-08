@@ -30,11 +30,6 @@ _has() {
 	type $1 &>/dev/null
 }
 
-if ! _has fd && _has fdfind && ! [ -L ~/.bin/fd ]
-then
-	ln -s =fdfind ~/.bin/fd
-fi
-
 _has_xclip=$(xhost &>/dev/null && _has xclip)
 _has_fd=$(_has fd)
 _has_fzf=$(_has fzf)
@@ -143,7 +138,7 @@ fi
 if $_has_fd
 then
 	# load fzf for history search
-	FD_EXCLUDES='--exclude .git --exclude .wine --exclude .go --exclude .cargo --exclude .cache --exclude .java --exclude .tlauncher --exclude .steam --exclude .minecraft --exclude .gem'
+	FD_EXCLUDES='--exclude .git'
 	export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow ${FD_EXCLUDES}"
 	export FZF_DEFAULT_OPTS="--reverse"
 	export FZF_ALT_C_COMMAND="fd --type d --hidden --follow ${FD_EXCLUDES}"
@@ -177,15 +172,6 @@ precmd() {
 	local last_exit_code=$?
 
 	PROMPT="%{$fg[cyan]%}[%~%{$reset_color%}"
-	# if $(git status -s &> /dev/null)
-	# then
-	# 	if [[ $(git status --porcelain) == "" ]]
-	# 	then
-	# 		PROMPT+="%{$fg_bold[cyan]%} %{$reset_color%}"
-	# 	else
-	# 		PROMPT+="%{$fg_bold[red]%} %{$reset_color%}"
-	# 	fi
-	# fi
 	if [[ -v SSH_CLIENT ]]; then
 		PROMPT+=" %{$fg[blue]%}@`hostnamectl hostname | head -c 2`%{$reset_color%}"
 		print -Pn "\e]0;%~ @`hostnamectl hostname | head -c 2`\a"
@@ -219,133 +205,42 @@ export EDITOR=nvim
 export MANPAGER='nvim +Man!'
 export GOPATH=$HOME/.go
 export DOTNETPATH=$HOME/.dotnet
-export ANDROID_SDK_ROOT=$HOME/.android-sdk
-export ANDROID_HOME=$HOME/.android-sdk
-export PATH=$HOME/.bin:$GOPATH/bin:$DOTNETPATH/tools:$HOME/.cargo/bin:$HOME/.node/bin:$HOME/.pub-cache/bin:$HOME/.local/bin:$PATH
+export PATH=$HOME/.bin:$HOME/.local/bin:$GOPATH/bin:$DOTNETPATH/tools:$HOME/.cargo/bin:$PATH
 
 # nice colors for jq
 export JQ_COLORS="1;31:1;31:1;31:1;31:1;32:1;37:1;37"
 
 alias vim=nvim
 alias e='exit'
-alias dl='cd ~/downloads'
 alias z='zathura'
 alias ls='ls --color'
 alias l='ls'
 alias la='ls -la'
 alias c='clear'
-alias n='vim "+normal oinbox" "+normal Otags:" "+normal kO" -c "startinsert"  ~/.org/data/$(date +%Y.%m.%d.%H.%M.%S).txt; e'
-alias t='recdirs trim'
+alias n='vim "+normal oinbox" "+normal Otags:" "+normal kO" -c "startinsert" ~/.org/data/$(date +%Y.%m.%d.%H.%M.%S).txt; e'
 alias gr='go run .'
 alias gt='go test .'
 alias gd='git diff'
-alias gdd='git diff --word-diff'
-alias gdds='git diff --word-diff --staged'
 alias gds='git diff --staged'
 alias gst='git status'
 alias gco='git checkout'
 alias gc='git commit -v'
-alias gcm='git commit -m'
 alias gca='git commit -a -v'
 alias gps='git push'
 alias gpl='git pull'
 alias wip='git commit -a -m "wip"'
 alias yd='yadm diff'
-alias ydd='yadm diff --word-diff'
+alias yds='yadm diff --staged'
 alias yst='yadm status'
-alias ycm='yadm commit -m'
 alias yc='yadm commit -v'
-alias yca='yadm commit -va'
+alias yca='yadm commit -a -v'
 alias yps='yadm push'
 alias ypl='yadm pull'
 alias gtmp='tmp && dir=$(xclip -o -selection clipboard) && git clone "$dir" && cd $(basename "$dir")'
 alias disablescreensaver='xset s off && xset -dpms'
-alias png2clip='xclip -selection clipboard -t image/png -i'
-alias clip2png='xclip -selection clipboard -t image/png -o >'
 alias vj='read_stdin_or_clip | jq 2>&1 | vim -c "set syntax=json" "+normal L" -'
-alias vx='read_stdin_or_clip | xmllint --format - 2>&1 | vim -c "set syntax=xml" "+normal L" -'
-alias vh='read_stdin_or_clip | tidy -i -q --show-warnings 0 --show-errors 0 | vim -c "set syntax=html" "+normal L" -'
 
 # templates
-ctmp() {
-	project_name=${1:-tmp}
-	tmp
-	cat << EOF > main.c
-#include <stdio.h>
-
-int main(int argc, char** argv) {
-	printf("tmp\n");
-}
-EOF
-	cat << EOF > CMakeLists.txt
-cmake_minimum_required(VERSION 3.17)
-
-# set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-project($project_name C)
-
-# build MinSizeRel with stripped debug info by default
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "" FORCE)
-    set(CMAKE_C_FLAGS "-s" CACHE STRING "" FORCE)
-endif()
-
-add_executable($project_name main.c)
-# target_link_libraries($project_name sodium)
-
-# install(TARGETS tmp DESTINATION bin)
-EOF
-	cat << EOF > Makefile
-all:
-	make -C build
-	echo
-	./build/$project_name
-EOF
-	mkdir build
-	cmake -DCMAKE_BUILD_TYPE=Debug -B build
-	vim main.c
-}
-
-cctmp() {
-	project_name=${1:-tmp}
-	tmp
-	cat << EOF > main.cc
-#include <cstdio>
-
-int main(int argc, char** argv) {
-	std::printf("tmp\n");
-}
-EOF
-	cat << EOF > CMakeLists.txt
-cmake_minimum_required(VERSION 3.17)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-project($project_name CXX)
-
-# build MinSizeRel with stripped debug info by default
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "" FORCE)
-    set(CMAKE_C_FLAGS "-s" CACHE STRING "" FORCE)
-endif()
-
-add_executable($project_name main.cc)
-# target_link_libraries($project_name sodium)
-
-# install(TARGETS tmp DESTINATION bin)
-EOF
-	cat << EOF > Makefile
-all:
-	make -C build
-	echo
-	./build/$project_name
-EOF
-	mkdir build
-	cmake -B build
-	vim main.cc
-}
-
 gotmp() {
 	project_name=${1:-tmp}
 	tmp

@@ -1,11 +1,5 @@
-# Global properties
 separator=true
 separator_block_width=15
-
-# [cpu]
-# command=date '+%d %b %H %M %s'
-# interval=once
-# signal=10
 
 [ip]
 command=type blocks > /dev/null 2>&1 && blocks ip enp34s0
