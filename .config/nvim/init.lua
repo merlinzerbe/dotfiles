@@ -366,6 +366,25 @@ local treesitter_spec = {
   end,
 }
 
+local function find_go_modpath()
+  local results = vim.fs.find("go.mod", { upward = true })
+  if #results == 0 then
+    return nil
+  end
+
+  local file_path = results[1]
+  local file = io.open(file_path, "r")
+  if not file then
+    return nil
+  end
+
+  for line in file:lines() do
+    local module_name = line:match("^module%s+(.+)$")
+    file:close()
+    return module_name
+  end
+end
+
 local lspconfig_spec = {
   "neovim/nvim-lspconfig",
   event = { "BufReadPre", "BufNewFile" },
@@ -412,6 +431,18 @@ local lspconfig_spec = {
 
     local null_ls = require("null-ls")
 
+    local go_modpath = find_go_modpath()
+
+    local gofumpt_source = null_ls.builtins.formatting.gofumpt
+    if go_modpath ~= nil then
+      -- gofumpt considers the modpath when grouping imports and we want to
+      -- have the same behavior whether calling gofumpt from inside vim or from
+      -- the cli, so we add the modpath manually
+      gofumpt_source = null_ls.builtins.formatting.gofumpt.with({
+        extra_args = { "-modpath", go_modpath },
+      })
+    end
+
     null_ls.setup({
       sources = {
         -- format typescript/html/css/vue
@@ -427,7 +458,7 @@ local lspconfig_spec = {
         -- unfortunately we cannot use it as a base formatter for golines
         -- https://github.com/segmentio/golines/issues/100
         -- so we run it afterwards and format the file twice
-        null_ls.builtins.formatting.gofumpt,
+        gofumpt_source,
       },
       on_attach = function(client, bufnr)
         if client.supports_method("textDocument/formatting") then

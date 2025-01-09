@@ -205,7 +205,7 @@ export EDITOR=nvim
 export MANPAGER='nvim +Man!'
 export GOPATH=$HOME/.go
 export DOTNETPATH=$HOME/.dotnet
-export PATH=$HOME/.bin:$HOME/.local/bin:$GOPATH/bin:$DOTNETPATH/tools:$HOME/.cargo/bin:$PATH
+export PATH=$HOME/.bin:$HOME/.local/bin:$GOPATH/bin:$DOTNETPATH/tools:$HOME/.cargo/bin:$HOME/.local/share/nvim/mason/bin:$PATH
 
 # nice colors for jq
 export JQ_COLORS="1;31:1;31:1;31:1;31:1;32:1;37:1;37"
