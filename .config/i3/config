@@ -9,6 +9,7 @@ bindsym $mod+d exec rofi -show run
 bindsym $mod+p exec rofi-pass
 bindsym F11 exec setxkbmap de -option caps:swapescape
 bindsym F10 exec xkbcomp -I$HOME/.config/xkb ~/.config/xkb/map $DISPLAY
+bindsym Menu exec mplayer $HOME/.sound.wav
 
 bindsym $mod+h focus left
 bindsym $mod+j focus down
