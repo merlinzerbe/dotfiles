@@ -27,6 +27,7 @@ vim.opt.foldlevelstart = 99    -- expand all folds on start
 vim.opt.updatetime = 100       -- check if the file has been changed externally more often
 vim.opt.signcolumn = "number"  -- show signs in number column
 vim.opt.termguicolors = false  -- use cterm attributes instead of gui attributes for color scheme
+vim.opt.modeline = false       -- do no parse vim options from comments in files
 vim.g.syntax = false           -- disable regex based syntax highlighting, use treesitter instead
 
 vim.cmd("set spelllang=de")
