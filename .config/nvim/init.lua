@@ -241,6 +241,7 @@ local mason_tool_installer_spec = {
         "golines",
         "gofumpt",
         "golangci-lint",
+        "prettierd",
       },
     })
   end,
