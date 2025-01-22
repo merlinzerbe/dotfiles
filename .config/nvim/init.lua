@@ -153,52 +153,6 @@ watch_colorscheme()
 vim.api.nvim_command("autocmd FileType dirvish nmap <buffer> <esc> gq")
 vim.api.nvim_command("autocmd FileType dirvish nmap <buffer> <leader>q gq")
 
--- run golangci-lint after saving go files
-vim.api.nvim_create_autocmd("BufWritePost", {
-  pattern = "*.go",
-  callback = function()
-    local filename = vim.fn.expand("%:p")
-
-    -- run golangci-lint only on the current file with auto-fix
-    local output = vim.fn.systemlist(string.format("golangci-lint run --fix --fast --out-format json %s", filename))
-
-    -- we need to reload the file because `golangci-lint --fix` changes the file in-place
-    -- when reloading the file, the line on which the cursor was before the reload is centered so the view 'jumps'
-    -- to counter that, we restore the view after reloading the file
-    local view = vim.fn.winsaveview()
-    vim.cmd("edit")
-    vim.fn.winrestview(view)
-
-    -- TODO: to get more diagnostics here without freezing the ui we could run golangci-lint without --fast here asynchronously and the show the returned diagnostics. if the user saves againg while this command is running, we abort it.
-
-    -- parse the output of golangci-lint
-    local success, lint_data = pcall(vim.fn.json_decode, table.concat(output, "\n"))
-    if not success then
-      vim.notify("failed to parse golangci-lint output", vim.log.levels.ERROR)
-      return
-    end
-
-    -- show diagnostics
-    local diagnostics = {}
-
-    if lint_data and lint_data.Issues then
-      for _, issue in ipairs(lint_data.Issues) do
-        table.insert(diagnostics, {
-          lnum = issue.Pos.Line - 1,  -- nvim uses 0-based indexing
-          col = issue.Pos.Column - 1, -- nvim uses 0-based indexing
-          severity = vim.diagnostic.severity.WARN,
-          message = issue.Text,
-          source = issue.FromLinter,
-        })
-      end
-    end
-
-    local namespace = vim.api.nvim_create_namespace("golangci-lint")
-
-    vim.diagnostic.set(namespace, 0, diagnostics)
-  end,
-})
-
 -- return to the last edited line when reopening a file
 vim.api.nvim_create_autocmd("BufRead", {
   callback = function(opts)
@@ -454,13 +408,15 @@ local lspconfig_spec = {
         null_ls.builtins.formatting.stylua,
 
         -- runs goimports and then formats while shortening long lines
-        null_ls.builtins.formatting.golines,
+        -- null_ls.builtins.formatting.golines,
 
         -- gofumpt does stricter formatting than gofmt
         -- unfortunately we cannot use it as a base formatter for golines
         -- https://github.com/segmentio/golines/issues/100
         -- so we run it afterwards and format the file twice
         gofumpt_source,
+
+        null_ls.builtins.diagnostics.golangci_lint,
       },
       on_attach = function(client, bufnr)
         if client.supports_method("textDocument/formatting") then
