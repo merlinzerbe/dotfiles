@@ -408,7 +408,7 @@ local lspconfig_spec = {
         null_ls.builtins.formatting.stylua,
 
         -- runs goimports and then formats while shortening long lines
-        -- null_ls.builtins.formatting.golines,
+        null_ls.builtins.formatting.golines,
 
         -- gofumpt does stricter formatting than gofmt
         -- unfortunately we cannot use it as a base formatter for golines
