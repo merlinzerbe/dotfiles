@@ -420,6 +420,8 @@ local lspconfig_spec = {
     end
 
     local capabilities = cmp_nvim_lsp.default_capabilities()
+    capabilities.document_formatting = false
+    capabilities.document_range_formatting = false
 
     lspconfig["ruff"].setup({
       capabilities = capabilities,
@@ -505,7 +507,13 @@ local lspconfig_spec = {
 
     lspconfig["volar"].setup({
       capabilities = capabilities,
-      on_attach = on_attach,
+      on_attach = function(client, bufnr)
+        -- we use prettier so we do not want volar to format our code
+        client.server_capabilities.documentFormattingProvider = false
+        client.server_capabilities.documentRangeFormattingProvider = false
+
+        on_attach(client, bufnr)
+      end,
     })
 
     lspconfig["html"].setup({
