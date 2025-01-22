@@ -441,7 +441,13 @@ local lspconfig_spec = {
 
     lspconfig["ts_ls"].setup({
       capabilities = capabilities,
-      on_attach = on_attach,
+      on_attach = function(client, bufnr)
+        -- we use prettier so we do not want ts_ls to format our code
+        client.server_capabilities.documentFormattingProvider = false
+        client.server_capabilities.documentRangeFormattingProvider = false
+
+        on_attach(client, bufnr)
+      end,
       init_options = {
         plugins = {
           {
