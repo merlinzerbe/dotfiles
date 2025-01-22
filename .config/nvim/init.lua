@@ -420,8 +420,6 @@ local lspconfig_spec = {
     end
 
     local capabilities = cmp_nvim_lsp.default_capabilities()
-    capabilities.document_formatting = false
-    capabilities.document_range_formatting = false
 
     lspconfig["ruff"].setup({
       capabilities = capabilities,
