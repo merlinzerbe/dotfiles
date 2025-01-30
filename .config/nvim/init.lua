@@ -197,6 +197,7 @@ local mason_tool_installer_spec = {
         "gofumpt",
         "golangci-lint",
         "prettierd",
+        "eslint_d",
       },
     })
   end,
@@ -346,6 +347,7 @@ local lspconfig_spec = {
   event = { "BufReadPre", "BufNewFile" },
   dependencies = {
     "nvimtools/none-ls.nvim",
+    "nvimtools/none-ls-extras.nvim",
     "nvim-telescope/telescope.nvim",
   },
 
@@ -403,6 +405,10 @@ local lspconfig_spec = {
       sources = {
         -- format typescript/html/css/vue
         null_ls.builtins.formatting.prettierd,
+
+        -- lint typescript/html/css/vue
+        -- eslint_d is from none-ls-extras so we have to use require here
+        require("none-ls.diagnostics.eslint_d"),
 
         -- format lua files
         null_ls.builtins.formatting.stylua,
