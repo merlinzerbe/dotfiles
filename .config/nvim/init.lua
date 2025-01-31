@@ -535,17 +535,24 @@ local lspconfig_spec = {
     -- vim detects .typ files as sql
     -- we need to add this manually so that the lsp is properly attached
     vim.filetype.add({ extension = { typ = "typst" } })
-    lspconfig["tinymist"].setup({
-      offset_encoding = "utf-8",
+    require("lspconfig")["tinymist"].setup({
       capabilities = capabilities,
-      on_attach = on_attach,
-      settings = {
-        exportPdf = "onSave",
-      },
-      root_dir = function()
-        return vim.fn.getcwd()
+      on_attach = function(client, bufnr)
+        on_attach(client, bufnr)
+
+        -- force formatting, idk why this does not work automatically
+        vim.api.nvim_create_autocmd("BufWritePre", {
+          buffer = bufnr,
+          callback = function()
+            vim.lsp.buf.format()
+          end,
+        })
       end,
-      single_file_support = true,
+      settings = {
+        formatterMode = "typstyle",
+        exportPdf = "onType",
+        semanticTokens = "disable",
+      },
     })
 
     lspconfig["lua_ls"].setup({
