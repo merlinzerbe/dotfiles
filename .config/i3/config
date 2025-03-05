@@ -84,12 +84,13 @@ bindsym XF86AudioMute exec amixer set Master toggle
 # screenshots
 bindsym Print exec flameshot full -p /tmp
 bindsym Shift+Print exec flameshot gui
+bindsym Ctrl+Shift+Print exec flameshot gui --raw | xoverlay -
 
 # lock screen
 bindsym Pause exec i3lock -c 262626 && sleep 0.3 && xset dpms force off
 
 # background color
-exec_always --no-startup-id xsetroot -solid "#262626"
+exec_always --no-startup-id hsetroot -solid "#262626"
 
 exec --no-startup-id zsh -c '$HOME/.bin/i3layout'
 exec --no-startup-id redshift
@@ -100,3 +101,10 @@ exec_always --no-startup-id xset r rate 180 70
 
 # load custom keymap
 exec_always --no-startup-id xkbcomp -I$HOME/.config/xkb ~/.config/xkb/map $DISPLAY
+
+# start picom so we have transparency support for windows
+# we need this for xoverlay
+exec --no-startup-id picom --config ~/.config/picom/picom.conf -b 
+
+# start xoverlay always in a floating window
+for_window [class="overlay"] floating enable
