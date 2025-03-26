@@ -198,6 +198,8 @@ local mason_tool_installer_spec = {
         "golangci-lint",
         "prettierd",
         "eslint_d",
+        "php-cs-fixer",
+        "phpstan",
       },
     })
   end,
@@ -229,6 +231,7 @@ local mason_spec = {
         "denols",
         "omnisharp",
         "tinymist",
+        "phpactor",
       },
     })
   end,
@@ -315,6 +318,7 @@ local treesitter_spec = {
         "rust",
         "svelte",
         "templ",
+        "php",
       },
       ts_context_commentstring = {
         enable = true,
@@ -387,6 +391,11 @@ local lspconfig_spec = {
       on_attach = on_attach,
     })
 
+    lspconfig["phpactor"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+
     local null_ls = require("null-ls")
 
     local go_modpath = find_go_modpath()
@@ -403,6 +412,9 @@ local lspconfig_spec = {
 
     null_ls.setup({
       sources = {
+        -- format php files
+        null_ls.builtins.formatting.phpcsfixer,
+
         -- format typescript/html/css/vue
         null_ls.builtins.formatting.prettierd,
 
@@ -423,6 +435,9 @@ local lspconfig_spec = {
         gofumpt_source,
 
         null_ls.builtins.diagnostics.golangci_lint,
+
+        -- for typechecking php files
+        null_ls.builtins.diagnostics.phpstan,
       },
       on_attach = function(client, bufnr)
         if client.supports_method("textDocument/formatting") then
@@ -438,7 +453,24 @@ local lspconfig_spec = {
 
     lspconfig["pyright"].setup({
       capabilities = capabilities,
-      on_attach = on_attach,
+      on_attach = function(client, bufnr)
+        vim.api.nvim_create_autocmd("BufWritePre", {
+          buffer = bufnr,
+          callback = function()
+            vim.lsp.buf.format()
+          end,
+        })
+        on_attach(client, bufnr)
+      end,
+      settings = {
+        disableOrganizeImports = true,
+      },
+      python = {
+        analysis = {
+          -- ignore all files for analysis to exclusively use ruff for linting
+          ignore = { "*" },
+        },
+      },
     })
 
     local mason_registry = require("mason-registry")
@@ -535,6 +567,13 @@ local lspconfig_spec = {
     -- vim detects .typ files as sql
     -- we need to add this manually so that the lsp is properly attached
     vim.filetype.add({ extension = { typ = "typst" } })
+
+    local typst_font_paths_env = os.getenv("TYPST_FONT_PATHS")
+    local typst_font_paths = nil
+    if typst_font_paths_env ~= nil then
+      typst_font_paths = { typst_font_paths_env }
+    end
+
     require("lspconfig")["tinymist"].setup({
       capabilities = capabilities,
       on_attach = function(client, bufnr)
@@ -552,6 +591,7 @@ local lspconfig_spec = {
         formatterMode = "typstyle",
         exportPdf = "onType",
         semanticTokens = "disable",
+        fontPaths = typst_font_paths,
       },
     })
 
