@@ -412,6 +412,10 @@ local lspconfig_spec = {
 
     null_ls.setup({
       sources = {
+        -- formatting and linting for python
+        require("none-ls.diagnostics.ruff"),
+        require("none-ls.formatting.ruff"),
+
         -- format php files
         null_ls.builtins.formatting.phpcsfixer,
 
