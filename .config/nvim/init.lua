@@ -420,6 +420,15 @@ local lspconfig_spec = {
       })
     end
 
+    local function has_eslint_config()
+      local results = vim.fs.find("eslint.config.mjs", { upward = true })
+      if #results == 0 then
+        return false
+      end
+
+      return true
+    end
+
     null_ls.setup({
       sources = {
         -- formatting for python (linting is handled by ruff lsp itself)
@@ -433,7 +442,7 @@ local lspconfig_spec = {
 
         -- lint typescript/html/css/vue
         -- eslint_d is from none-ls-extras so we have to use require here
-        require("none-ls.diagnostics.eslint_d"),
+        require("none-ls.diagnostics.eslint_d").with({ condition = has_eslint_config }),
 
         -- format lua files
         null_ls.builtins.formatting.stylua,
