@@ -381,6 +381,16 @@ local lspconfig_spec = {
 
     local capabilities = cmp_nvim_lsp.default_capabilities()
 
+    -- declare only utf-16 as supported position encoding. otherwise ruff will
+    -- chose utf-8 while pyright and none-ls use utf-16 which results in
+    -- warning in nvim
+    capabilities = vim.tbl_deep_extend("force", capabilities, {
+      offsetEncoding = { "utf-16" },
+      general = {
+        positionEncodings = { "utf-16" },
+      },
+    })
+
     lspconfig["ruff"].setup({
       capabilities = capabilities,
       on_attach = on_attach,
@@ -412,8 +422,7 @@ local lspconfig_spec = {
 
     null_ls.setup({
       sources = {
-        -- formatting and linting for python
-        require("none-ls.diagnostics.ruff"),
+        -- formatting for python (linting is handled by ruff lsp itself)
         require("none-ls.formatting.ruff"),
 
         -- format php files
