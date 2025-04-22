@@ -645,6 +645,32 @@ local lspconfig_spec = {
   end,
 }
 
+local avante_spec = {
+  "yetone/avante.nvim",
+  event = false,
+  version = "main",
+  opts = {
+    provider = "openwebui",
+    vendors = {
+      openwebui = {
+        __inherited_from = "openai",
+        endpoint = os.getenv("OPEN_WEBUI_ENDPOINT"),
+        api_key_name = "OPEN_WEBUI_API_KEY",
+        model = "qwen2.5-coder:32b",
+        max_tokens = 8192,
+        disable_tools = true,
+      },
+    },
+  },
+  build = "make",
+  dependencies = {
+    "nvim-treesitter/nvim-treesitter",
+    "stevearc/dressing.nvim",
+    "nvim-lua/plenary.nvim",
+    "MunifTanjim/nui.nvim",
+  },
+}
+
 local telescope_spec = {
   "nvim-telescope/telescope.nvim",
   branch = "0.1.x",
@@ -700,6 +726,7 @@ require("lazy").setup({
   treesitter_spec,
   markdown_preview_spec,
   telescope_spec,
+  avante_spec,
   "justinmk/vim-dirvish",
   "folke/neodev.nvim",
 }, {
