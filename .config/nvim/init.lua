@@ -60,8 +60,12 @@ k("n", "<leader>l", ":Telescope highlights<cr>", nore)
 k("n", "s", ":luafile %<cr>", nore)
 
 -- lsp
-k("n", "ge", vim.diagnostic.goto_prev, nore)
-k("n", "gE", vim.diagnostic.goto_next, nore)
+k("n", "ge", function()
+  vim.diagnostic.jump({ count = -1, float = true })
+end, nore)
+k("n", "gE", function()
+  vim.diagnostic.jump({ count = 1, float = true })
+end, nore)
 k("n", "<leader>e", vim.diagnostic.open_float, nore)
 k("n", "<leader>d", vim.diagnostic.setloclist, nore)
 k("n", "<leader>j", ":nohlsearch<cr>", nore) -- remove current search highlighting
