@@ -12,6 +12,7 @@ OPTIONS=showexp
 OPTIONS=symset:DECgraphics
 OPTIONS=time
 OPTIONS=color
+OPTIONS=hitpointbar
 SYMBOLS=S_boulder:0
 MENUCOLOR="blessed"=green
 MENUCOLOR="cursed"=red
