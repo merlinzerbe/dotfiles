@@ -202,7 +202,8 @@ local mason_tool_installer_spec = {
         "golangci-lint",
         "prettierd",
         "eslint_d",
-        "php-cs-fixer",
+        "phpcs",
+        "phpcbf",
         "phpstan",
       },
     })
@@ -438,9 +439,6 @@ local lspconfig_spec = {
         -- formatting for python (linting is handled by ruff lsp itself)
         require("none-ls.formatting.ruff"),
 
-        -- format php files
-        null_ls.builtins.formatting.phpcsfixer,
-
         -- format typescript/html/css/vue
         null_ls.builtins.formatting.prettierd,
 
@@ -462,8 +460,11 @@ local lspconfig_spec = {
 
         null_ls.builtins.diagnostics.golangci_lint,
 
-        -- for typechecking php files
-        null_ls.builtins.diagnostics.phpstan,
+        -- format/autofix php files
+        null_ls.builtins.formatting.phpcbf,
+
+        -- lint php files
+        -- null_ls.builtins.diagnostics.phpcs,
       },
       on_attach = function(client, bufnr)
         if client.supports_method("textDocument/formatting") then
@@ -505,6 +506,8 @@ local lspconfig_spec = {
 
     lspconfig["ts_ls"].setup({
       capabilities = capabilities,
+      root_dir = lspconfig.util.root_pattern("package.json"),
+      single_file_support = false,
       on_attach = function(client, bufnr)
         -- we use prettier so we do not want ts_ls to format our code
         client.server_capabilities.documentFormattingProvider = false
@@ -560,7 +563,16 @@ local lspconfig_spec = {
     vim.filetype.add({ extension = { templ = "templ" } })
     lspconfig["templ"].setup({
       capabilities = capabilities,
-      on_attach = on_attach,
+      on_attach = function(client, bufnr)
+        if client.supports_method("textDocument/formatting") then
+          vim.api.nvim_create_autocmd("BufWritePre", {
+            buffer = bufnr,
+            callback = function()
+              vim.lsp.buf.format()
+            end,
+          })
+        end
+      end,
     })
 
     lspconfig["denols"].setup({
@@ -578,16 +590,7 @@ local lspconfig_spec = {
           },
         },
       },
-      on_attach = function(client, bufnr)
-        local active_clients = vim.lsp.get_clients()
-        for _, active_client in pairs(active_clients) do
-          -- stop tsserver if denols is active
-          if active_client.name == "ts_ls" then
-            active_client.stop()
-          end
-        end
-        on_attach(client, bufnr)
-      end,
+      on_attach = on_attach,
     })
 
     -- vim detects .typ files as sql
@@ -656,7 +659,7 @@ local avante_spec = {
         __inherited_from = "openai",
         endpoint = os.getenv("OPEN_WEBUI_ENDPOINT"),
         api_key_name = "OPEN_WEBUI_API_KEY",
-        model = "qwen2.5-coder:32b",
+        model = "qwen2.5-coder:14b",
         max_tokens = 8192,
         disable_tools = true,
       },
