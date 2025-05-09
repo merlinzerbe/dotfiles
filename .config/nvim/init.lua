@@ -194,6 +194,7 @@ vim.opt.rtp:prepend(lazypath)
 
 local mason_tool_installer_spec = {
   "WhoIsSethDaniel/mason-tool-installer.nvim",
+  version = "^1.0.0",
   config = function()
     require("mason-tool-installer").setup({
       ensure_installed = {
@@ -212,8 +213,10 @@ local mason_tool_installer_spec = {
 
 local mason_spec = {
   "williamboman/mason.nvim",
+  version = "^1.0.0",
   dependencies = {
     "williamboman/mason-lspconfig.nvim",
+    version = "^1.0.0",
   },
   config = function()
     local mason = require("mason")
