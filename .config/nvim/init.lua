@@ -206,6 +206,7 @@ local mason_tool_installer_spec = {
         "phpcs",
         "phpcbf",
         "phpstan",
+        "djlint",
       },
     })
   end,
@@ -327,6 +328,7 @@ local treesitter_spec = {
         "svelte",
         "templ",
         "php",
+        "twig",
       },
       ts_context_commentstring = {
         enable = true,
@@ -466,8 +468,13 @@ local lspconfig_spec = {
         -- format/autofix php files
         null_ls.builtins.formatting.phpcbf,
 
-        -- lint php files
-        -- null_ls.builtins.diagnostics.phpcs,
+        -- format and lint twig templates
+        null_ls.builtins.formatting.djlint.with({
+          filetypes = { "twig" },
+        }),
+        null_ls.builtins.diagnostics.djlint.with({
+          filetypes = { "twig" },
+        }),
       },
       on_attach = function(client, bufnr)
         if client.supports_method("textDocument/formatting") then
