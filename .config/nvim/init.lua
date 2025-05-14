@@ -124,6 +124,9 @@ vim.cmd("autocmd FileType gdscript                              setlocal ts=2 no
 vim.cmd("autocmd FileType go                                    setlocal ts=4 noet tw=80")
 vim.cmd("autocmd FileType python                                setlocal ts=4 et")
 
+-- fix for php setting noautoindent which is annoying
+vim.cmd("autocmd FileType php                                   setlocal autoindent")
+
 -- fold settings
 vim.cmd("setlocal foldlevel=1 foldnestmax=1 foldmethod=syntax")
 vim.opt.foldmethod = "expr"
