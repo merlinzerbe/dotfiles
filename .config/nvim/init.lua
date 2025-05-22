@@ -233,7 +233,7 @@ local mason_spec = {
         "gopls",
         "lua_ls",
         "pyright",
-        "volar",
+        "vuels",
         "ts_ls",
         "templ",
         "html",
@@ -545,10 +545,10 @@ local lspconfig_spec = {
       },
     })
 
-    lspconfig["volar"].setup({
+    lspconfig["vuels"].setup({
       capabilities = capabilities,
       on_attach = function(client, bufnr)
-        -- we use prettier so we do not want volar to format our code
+        -- we use prettier so we do not want vuels to format our code
         client.server_capabilities.documentFormattingProvider = false
         client.server_capabilities.documentRangeFormattingProvider = false
 
