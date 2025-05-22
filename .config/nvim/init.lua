@@ -366,6 +366,7 @@ local lspconfig_spec = {
     "nvimtools/none-ls.nvim",
     "nvimtools/none-ls-extras.nvim",
     "nvim-telescope/telescope.nvim",
+    "ray-x/lsp_signature.nvim",
   },
 
   config = function()
@@ -657,6 +658,17 @@ local lspconfig_spec = {
           },
         },
       },
+    })
+
+    local lsp_signature = require("lsp_signature")
+    lsp_signature.setup({
+      bind = true,
+      hint_enable = false,           -- disable virtual text hint
+      doc_lines = 0,                 -- no doc lines, less noise
+      handler_opts = {
+        border = "none",             -- disable border so it matches the style of hover info
+      },
+      hi_parameter = "DoesNotExist", -- disable active parameter highlighting
     })
   end,
 }
