@@ -675,11 +675,10 @@ local lspconfig_spec = {
 
 local avante_spec = {
   "yetone/avante.nvim",
-  event = false,
-  version = "main",
+  event = "VeryLazy",
+  version = false,
   opts = {
-    provider = "openwebui",
-    vendors = {
+    providers = {
       openwebui = {
         __inherited_from = "openai",
         endpoint = os.getenv("OPEN_WEBUI_ENDPOINT"),
