@@ -210,6 +210,8 @@ local mason_tool_installer_spec = {
         "phpcbf",
         "phpstan",
         "djlint",
+        "shfmt",
+        "shellcheck",
       },
     })
   end,
@@ -244,6 +246,7 @@ local mason_spec = {
         "omnisharp",
         "tinymist",
         "phpactor",
+        "bashls",
       },
     })
   end,
@@ -332,6 +335,7 @@ local treesitter_spec = {
         "templ",
         "php",
         "twig",
+        "bash",
       },
       ts_context_commentstring = {
         enable = true,
@@ -420,6 +424,11 @@ local lspconfig_spec = {
       on_attach = on_attach,
     })
 
+    lspconfig["bashls"].setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+    })
+
     local null_ls = require("null-ls")
 
     local go_modpath = find_go_modpath()
@@ -479,6 +488,9 @@ local lspconfig_spec = {
         null_ls.builtins.diagnostics.djlint.with({
           filetypes = { "twig" },
         }),
+
+        -- bash scripts
+        null_ls.builtins.formatting.shfmt,
       },
       on_attach = function(client, bufnr)
         if client.supports_method("textDocument/formatting") then
