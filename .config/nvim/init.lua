@@ -757,6 +757,49 @@ local markdown_preview_spec = {
   end,
 }
 
+local mason_dap_spec = {
+  "jay-babu/mason-nvim-dap.nvim",
+  opts = {
+    ensure_installed = { "delve", "php" },
+    handlers = {},
+  },
+}
+
+local dap_ui_spec = {
+  "rcarriga/nvim-dap-ui",
+  dependencies = {
+    "mfussenegger/nvim-dap",
+    "nvim-neotest/nvim-nio",
+  },
+  config = function()
+    local dap_ui = require("dapui")
+    dap_ui.setup({
+      controls = {
+        enabled = false,
+      },
+      expand_lines = false,
+      layouts = {
+        {
+          elements = {
+            { id = "scopes",  size = 0.50 },
+            { id = "watches", size = 0.25 },
+            { id = "stacks",  size = 0.25 },
+          },
+          size = 0.5,
+          position = "right",
+        },
+        {
+          elements = {
+            "repl",
+          },
+          size = 10,
+          position = "bottom",
+        },
+      },
+    })
+  end,
+}
+
 require("lazy").setup({
   mason_spec,
   mason_tool_installer_spec,
@@ -766,6 +809,8 @@ require("lazy").setup({
   markdown_preview_spec,
   telescope_spec,
   avante_spec,
+  mason_dap_spec,
+  dap_ui_spec,
   "justinmk/vim-dirvish",
   "folke/neodev.nvim",
 }, {
