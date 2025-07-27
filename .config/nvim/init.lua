@@ -17,29 +17,21 @@ vim.opt.shiftwidth = 0            -- use whatever tabstop is
 vim.opt.softtabstop = -1          -- use whatever shiftwidth is
 -- if splitright is set, step into while debugging does not jump to the function
 -- vim.opt.splitright = true         -- more intuitive split positions
-vim.opt.splitbelow = true      -- more intuitive split positions
-vim.opt.mouse = ""             -- allow select and copy from vim via mouse
-vim.opt.shortmess:append("cI") -- do not show intro on startup
-vim.opt.laststatus = 1         -- only show statusline if there are multiple windows
-vim.opt.inccommand = "nosplit" -- highlight matched words when typing substitution commands
-vim.opt.scrolloff = 5          -- keep lines above and below the cursor while scrolling
-vim.opt.foldlevelstart = 99    -- expand all folds on start
-vim.opt.updatetime = 100       -- check if the file has been changed externally more often
-vim.opt.signcolumn = "number"  -- show signs in number column
-vim.opt.termguicolors = false  -- use cterm attributes instead of gui attributes for color scheme
-vim.opt.modeline = false       -- do no parse vim options from comments in files
-vim.g.syntax = false           -- disable regex based syntax highlighting, use treesitter instead
+vim.opt.splitbelow = true                                                 -- more intuitive split positions
+vim.opt.mouse = ""                                                        -- allow select and copy from vim via mouse
+vim.opt.shortmess:append("cI")                                            -- do not show intro on startup
+vim.opt.laststatus = 1                                                    -- only show statusline if there are multiple windows
+vim.opt.scrolloff = 5                                                     -- keep lines above and below the cursor while scrolling
+vim.opt.updatetime = 100                                                  -- check if the file has been changed externally more often
+vim.opt.signcolumn = "number"                                             -- show signs in number column
+vim.opt.termguicolors = false                                             -- use cterm attributes instead of gui attributes for color scheme
+vim.opt.modeline = false                                                  -- do no parse vim options from comments in files
+vim.opt.guicursor:remove({ "t:block-blinkon500-blinkoff500-TermCursor" }) -- disable cursor blinking in embedded terminal
+vim.g.syntax = false                                                      -- disable regex based syntax highlighting, use treesitter instead
 
 vim.cmd("set spelllang=de")
 
--- do not use virtual text for diagnostics
-vim.diagnostic.config({
-  virtual_text = false,
-  signs = true,
-  float = {
-    source = true,
-  },
-})
+vim.cmd.colorscheme("16term")
 
 -- keybindings
 vim.g.mapleader = " "
@@ -70,20 +62,6 @@ k("n", "<leader>e", vim.diagnostic.open_float, nore)
 k("n", "<leader>d", vim.diagnostic.setloclist, nore)
 k("n", "<leader>j", ":nohlsearch<cr>", nore) -- remove current search highlighting
 
--- debugging
-k("n", "<f4>", function()
-  require("dap").terminate()
-end)
-k("n", "<f5>", function()
-  require("dap").continue()
-end)
-k("n", "<f6>", function()
-  require("dap").step_over()
-end)
-k("n", "<f7>", function()
-  require("dap").step_into()
-end)
-
 -- move on visual lines
 k({ "n", "x" }, "k", "gk", { silent = true })
 k({ "n", "x" }, "j", "gj", { silent = true })
@@ -98,12 +76,16 @@ k("n", "<c-h>", "<c-w>h", nore)
 k("n", "0", "^", nore)
 k("n", "^", "0", nore)
 
+-- quit dirvish with <esc> or <leader>q
+vim.api.nvim_command("autocmd FileType dirvish nmap <buffer> <esc> gq")
+vim.api.nvim_command("autocmd FileType dirvish nmap <buffer> <leader>q gq")
+
 -- do not yank when pasting over visual selection
 vim.cmd("xnoremap <expr> p '\"_d\"'.v:register.'P'")
 
 -- open terminal with <leader>t
 vim.cmd("nnoremap <leader>t :let $VIM_DIR=expand('%:p:h')<cr>:split \\| terminal<cr>cd $VIM_DIR<cr>c<cr>")
-vim.cmd('autocmd TermOpen * startinsert " automatically start insert mode when opening term')
+vim.cmd("autocmd TermOpen * startinsert") -- automatically start insert mode when opening term
 vim.cmd("autocmd TermOpen * setlocal listchars= nonumber norelativenumber signcolumn=no laststatus=0 nospell")
 
 -- automatically start in insert mode for git commit messages
@@ -124,41 +106,11 @@ vim.cmd("autocmd FileType gdscript                              setlocal ts=2 no
 vim.cmd("autocmd FileType go                                    setlocal ts=4 noet tw=80")
 vim.cmd("autocmd FileType python                                setlocal ts=4 et")
 
--- fix for php setting noautoindent which is annoying
-vim.cmd("autocmd FileType php                                   setlocal autoindent")
-
--- fold settings
-vim.cmd("setlocal foldlevel=1 foldnestmax=1 foldmethod=syntax")
-vim.opt.foldmethod = "expr"
-vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
-
 -- abbreviations
 vim.cmd("iabbrev rud refactor: update dependencies")
 vim.cmd("iabbrev newvue <script setup lang='ts'><cr><cr></script><cr><cr><template><cr><cr></template>")
 
 vim.cmd.colorscheme("16term")
-
--- reload colorscheme when it changes
-local function watch_colorscheme()
-  local path = vim.fn.stdpath("config") .. "/colors/16term.lua"
-  local event = vim.loop.new_fs_event()
-  local function start()
-    event:start(path, {}, function()
-      event:stop()
-      vim.schedule_wrap(function()
-        vim.cmd("luafile " .. path)
-        start()
-      end)()
-    end)
-  end
-  start()
-end
-
-watch_colorscheme()
-
--- dirvish
-vim.api.nvim_command("autocmd FileType dirvish nmap <buffer> <esc> gq")
-vim.api.nvim_command("autocmd FileType dirvish nmap <buffer> <leader>q gq")
 
 -- return to the last edited line when reopening a file
 vim.api.nvim_create_autocmd("BufRead", {
@@ -195,60 +147,43 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-local mason_tool_installer_spec = {
-  "WhoIsSethDaniel/mason-tool-installer.nvim",
-  version = "^1.0.0",
-  config = function()
-    require("mason-tool-installer").setup({
-      ensure_installed = {
-        "golines",
-        "gofumpt",
-        "golangci-lint",
-        "prettierd",
-        "eslint_d",
-        "phpcs",
-        "phpcbf",
-        "phpstan",
-        "djlint",
-        "shfmt",
-        "shellcheck",
-      },
-    })
-  end,
-}
-
 local mason_spec = {
   "mason-org/mason.nvim",
-  version = "^1.0.0",
-  dependencies = {
-    "mason-org/mason-lspconfig.nvim",
-    version = "^1.0.0",
-  },
   config = function()
     local mason = require("mason")
-    local mason_lspconfig = require("mason-lspconfig")
+    local registry = require("mason-registry")
+    mason.setup()
+    local tools = {
+      "delve",
+      "deno",
+      "djlint",
+      "eslint_d",
+      "gofumpt",
+      "golangci-lint",
+      "golines",
+      "gopls",
+      "lua-language-server",
+      "phpactor",
+      "phpcbf",
+      "phpcs",
+      "phpstan",
+      "prettierd",
+      "ruff",
+      "shellcheck",
+      "shfmt",
+      "templ",
+      "tinymist",
+      "ty",
+      "vtsls",
+      "vue-language-server",
+    }
 
-    mason.setup({})
-
-    mason_lspconfig.setup({
-      ensure_installed = {
-        "gopls",
-        "lua_ls",
-        "pyright",
-        "volar",
-        "ts_ls",
-        "templ",
-        "html",
-        "emmet_language_server",
-        "svelte",
-        "ruff",
-        "denols",
-        "omnisharp",
-        "tinymist",
-        "phpactor",
-        "bashls",
-      },
-    })
+    for _, tool in ipairs(tools) do
+      local pkg = registry.get_package(tool)
+      if not pkg:is_installed() then
+        vim.cmd("MasonInstall " .. tool)
+      end
+    end
   end,
 }
 
@@ -268,20 +203,12 @@ local cmp_spec = {
   config = function()
     local cmp = require("cmp")
     local luasnip = require("luasnip")
-    local capabilities = vim.lsp.protocol.make_client_capabilities()
-    capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
-
-    vim.opt.completeopt = "menu,menuone,noinsert"
 
     cmp.setup({
       snippet = {
         expand = function(args)
           luasnip.lsp_expand(args.body)
         end,
-      },
-      ---@diagnostic disable-next-line: missing-fields
-      completion = {
-        completeopt = "menu,menuone,noinsert",
       },
       mapping = cmp.mapping.preset.insert({
         ["<c-space>"] = cmp.mapping.complete(),
@@ -344,94 +271,71 @@ local treesitter_spec = {
   end,
 }
 
-local function find_go_modpath()
-  local results = vim.fs.find("go.mod", { upward = true })
-  if #results == 0 then
-    return nil
-  end
-
-  local file_path = results[1]
-  local file = io.open(file_path, "r")
-  if not file then
-    return nil
-  end
-
-  for line in file:lines() do
-    local module_name = line:match("^module%s+(.+)$")
-    file:close()
-    return module_name
-  end
-end
-
 local lspconfig_spec = {
   "neovim/nvim-lspconfig",
-  event = { "BufReadPre", "BufNewFile" },
   dependencies = {
     "nvimtools/none-ls.nvim",
     "nvimtools/none-ls-extras.nvim",
     "nvim-telescope/telescope.nvim",
-    "ray-x/lsp_signature.nvim",
+    {
+      "ray-x/lsp_signature.nvim",
+      commit = "292366",
+    },
   },
-
   config = function()
-    local lspconfig = require("lspconfig")
-    local cmp_nvim_lsp = require("cmp_nvim_lsp")
+    local vue_language_server_path = vim.fn.stdpath("data")
+        .. "/mason/packages/vue-language-server/node_modules/@vue/language-server"
 
-    local on_attach = function(client, bufnr)
-      local nmap = function(keys, func, desc)
-        if desc then
-          desc = "LSP: " .. desc
-        end
+    local vue_plugin = {
+      name = "@vue/typescript-plugin",
+      location = vue_language_server_path,
+      languages = { "vue" },
+      configNamespace = "typescript",
+    }
 
-        vim.keymap.set("n", keys, func, { buffer = bufnr, desc = desc })
+    local vtsls_config = {
+      settings = {
+        vtsls = {
+          tsserver = {
+            globalPlugins = {
+              vue_plugin,
+            },
+          },
+        },
+      },
+      filetypes = {
+        "typescript",
+        "javascript",
+        "javascriptreact",
+        "typescriptreact",
+        "vue",
+      },
+    }
+
+    vim.lsp.config("vtsls", vtsls_config)
+
+    local function find_go_modpath()
+      local results = vim.fs.find("go.mod", { upward = true })
+      if #results == 0 then
+        return nil
       end
 
-      nmap("<leader>r", vim.lsp.buf.rename)
-      nmap("<leader>a", vim.lsp.buf.code_action)
-      vim.keymap.set("v", "<leader>a", vim.lsp.buf.code_action, { buffer = bufnr })
-      nmap("<leader>e", vim.lsp.buf.hover)
-      nmap("gD", vim.lsp.buf.declaration)
-      nmap("gd", require("telescope.builtin").lsp_definitions)
-      nmap("gr", require("telescope.builtin").lsp_references)
-      nmap("gi", require("telescope.builtin").lsp_implementations)
-      nmap("gy", require("telescope.builtin").lsp_type_definitions)
+      local file_path = results[1]
+      local file = io.open(file_path, "r")
+      if not file then
+        return nil
+      end
+
+      for line in file:lines() do
+        local module_name = line:match("^module%s+(.+)$")
+        file:close()
+        return module_name
+      end
     end
 
-    local capabilities = cmp_nvim_lsp.default_capabilities()
-
-    -- declare only utf-16 as supported position encoding. otherwise ruff will
-    -- chose utf-8 while pyright and none-ls use utf-16 which results in
-    -- warning in nvim
-    capabilities = vim.tbl_deep_extend("force", capabilities, {
-      offsetEncoding = { "utf-16" },
-      general = {
-        positionEncodings = { "utf-16" },
-      },
-    })
-
-    lspconfig["ruff"].setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
-    })
-
-    lspconfig["gopls"].setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
-    })
-
-    lspconfig["phpactor"].setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
-    })
-
-    lspconfig["bashls"].setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
-    })
+    local go_modpath = find_go_modpath()
 
     local null_ls = require("null-ls")
-
-    local go_modpath = find_go_modpath()
 
     local gofumpt_source = null_ls.builtins.formatting.gofumpt
     if go_modpath ~= nil then
@@ -464,9 +368,6 @@ local lspconfig_spec = {
         -- eslint_d is from none-ls-extras so we have to use require here
         require("none-ls.diagnostics.eslint_d").with({ condition = has_eslint_config }),
 
-        -- format lua files
-        null_ls.builtins.formatting.stylua,
-
         -- runs goimports and then formats while shortening long lines
         null_ls.builtins.formatting.golines,
 
@@ -492,136 +393,7 @@ local lspconfig_spec = {
         -- bash scripts
         null_ls.builtins.formatting.shfmt,
       },
-      on_attach = function(client, bufnr)
-        if client.supports_method("textDocument/formatting") then
-          vim.api.nvim_create_autocmd("BufWritePre", {
-            buffer = bufnr,
-            callback = function()
-              vim.lsp.buf.format()
-            end,
-          })
-        end
-      end,
     })
-
-    lspconfig["pyright"].setup({
-      capabilities = capabilities,
-      on_attach = function(client, bufnr)
-        vim.api.nvim_create_autocmd("BufWritePre", {
-          buffer = bufnr,
-          callback = function()
-            vim.lsp.buf.format()
-          end,
-        })
-        on_attach(client, bufnr)
-      end,
-      settings = {
-        disableOrganizeImports = true,
-      },
-      python = {
-        analysis = {
-          -- ignore all files for analysis to exclusively use ruff for linting
-          ignore = { "*" },
-        },
-      },
-    })
-
-    local mason_registry = require("mason-registry")
-    local vue_language_server_path = mason_registry.get_package("vue-language-server"):get_install_path()
-        .. "/node_modules/@vue/language-server"
-
-    lspconfig["ts_ls"].setup({
-      capabilities = capabilities,
-      root_dir = lspconfig.util.root_pattern("package.json"),
-      single_file_support = false,
-      on_attach = function(client, bufnr)
-        -- we use prettier so we do not want ts_ls to format our code
-        client.server_capabilities.documentFormattingProvider = false
-        client.server_capabilities.documentRangeFormattingProvider = false
-
-        on_attach(client, bufnr)
-      end,
-      init_options = {
-        plugins = {
-          {
-            name = "@vue/typescript-plugin",
-            location = vue_language_server_path,
-            languages = { "vue" },
-          },
-        },
-      },
-      filetypes = {
-        "typescript",
-        "typescriptreact",
-        "javascript",
-        "vue",
-      },
-    })
-
-    lspconfig["volar"].setup({
-      capabilities = capabilities,
-      on_attach = function(client, bufnr)
-        -- we use prettier so we do not want volar to format our code
-        client.server_capabilities.documentFormattingProvider = false
-        client.server_capabilities.documentRangeFormattingProvider = false
-
-        on_attach(client, bufnr)
-      end,
-    })
-
-    lspconfig["html"].setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
-      filetypes = { "html", "templ" },
-    })
-
-    lspconfig["svelte"].setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
-    })
-
-    lspconfig["emmet_language_server"].setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
-      filetypes = { "html", "templ" },
-    })
-
-    vim.filetype.add({ extension = { templ = "templ" } })
-    lspconfig["templ"].setup({
-      capabilities = capabilities,
-      on_attach = function(client, bufnr)
-        if client.supports_method("textDocument/formatting") then
-          vim.api.nvim_create_autocmd("BufWritePre", {
-            buffer = bufnr,
-            callback = function()
-              vim.lsp.buf.format()
-            end,
-          })
-        end
-      end,
-    })
-
-    lspconfig["denols"].setup({
-      root_dir = lspconfig.util.root_pattern("deno.json", "deno.jsonc"),
-      init_options = {
-        lint = true,
-        unstable = true,
-        suggest = {
-          imports = {
-            hosts = {
-              ["https://deno.land"] = true,
-              ["https://cdn.nest.land"] = true,
-              ["https://crux.land"] = true,
-            },
-          },
-        },
-      },
-      on_attach = on_attach,
-    })
-
-    -- vim detects .typ files as sql
-    -- we need to add this manually so that the lsp is properly attached
-    vim.filetype.add({ extension = { typ = "typst" } })
 
     local typst_font_paths_env = os.getenv("TYPST_FONT_PATHS")
     local typst_font_paths = nil
@@ -629,19 +401,7 @@ local lspconfig_spec = {
       typst_font_paths = { typst_font_paths_env }
     end
 
-    require("lspconfig")["tinymist"].setup({
-      capabilities = capabilities,
-      on_attach = function(client, bufnr)
-        on_attach(client, bufnr)
-
-        -- force formatting, idk why this does not work automatically
-        vim.api.nvim_create_autocmd("BufWritePre", {
-          buffer = bufnr,
-          callback = function()
-            vim.lsp.buf.format()
-          end,
-        })
-      end,
+    vim.lsp.config("tinymist", {
       settings = {
         formatterMode = "typstyle",
         exportPdf = "onType",
@@ -650,9 +410,7 @@ local lspconfig_spec = {
       },
     })
 
-    lspconfig["lua_ls"].setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
+    vim.lsp.config("lua_ls", {
       settings = {
         Lua = {
           -- make the language server recognize the "vim" global
@@ -672,6 +430,8 @@ local lspconfig_spec = {
       },
     })
 
+    vim.lsp.enable({ "ty", "vtsls", "vue_ls", "gopls", "ruff", "phpactor", "tinymist", "lua_ls" })
+
     local lsp_signature = require("lsp_signature")
     lsp_signature.setup({
       bind = true,
@@ -685,34 +445,8 @@ local lspconfig_spec = {
   end,
 }
 
-local avante_spec = {
-  "yetone/avante.nvim",
-  event = "VeryLazy",
-  version = false,
-  opts = {
-    providers = {
-      openwebui = {
-        __inherited_from = "openai",
-        endpoint = os.getenv("OPEN_WEBUI_ENDPOINT"),
-        api_key_name = "OPEN_WEBUI_API_KEY",
-        model = "qwen2.5-coder:14b",
-        max_tokens = 8192,
-        disable_tools = true,
-      },
-    },
-  },
-  build = "make",
-  dependencies = {
-    "nvim-treesitter/nvim-treesitter",
-    "stevearc/dressing.nvim",
-    "nvim-lua/plenary.nvim",
-    "MunifTanjim/nui.nvim",
-  },
-}
-
 local telescope_spec = {
   "nvim-telescope/telescope.nvim",
-  branch = "0.1.x",
   dependencies = {
     "nvim-lua/plenary.nvim",
     { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
@@ -753,70 +487,55 @@ local markdown_preview_spec = {
   cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
   ft = { "markdown" },
   build = function()
+    vim.cmd([[Lazy load markdown-preview.nvim]])
     vim.fn["mkdp#util#install"]()
   end,
 }
 
-local mason_dap_spec = {
-  "jay-babu/mason-nvim-dap.nvim",
-  opts = {
-    ensure_installed = { "delve", "php" },
-    handlers = {},
-  },
-}
-
-local dap_ui_spec = {
-  "rcarriga/nvim-dap-ui",
-  dependencies = {
-    "mfussenegger/nvim-dap",
-    "nvim-neotest/nvim-nio",
-  },
-  config = function()
-    local dap_ui = require("dapui")
-    dap_ui.setup({
-      controls = {
-        enabled = false,
-      },
-      expand_lines = false,
-      layouts = {
-        {
-          elements = {
-            { id = "scopes",  size = 0.50 },
-            { id = "watches", size = 0.25 },
-            { id = "stacks",  size = 0.25 },
-          },
-          size = 0.5,
-          position = "right",
-        },
-        {
-          elements = {
-            "repl",
-          },
-          size = 10,
-          position = "bottom",
-        },
-      },
-    })
-  end,
-}
-
 require("lazy").setup({
-  mason_spec,
-  mason_tool_installer_spec,
   cmp_spec,
-  lspconfig_spec,
   treesitter_spec,
   markdown_preview_spec,
   telescope_spec,
-  avante_spec,
-  mason_dap_spec,
-  dap_ui_spec,
+  mason_spec,
   "justinmk/vim-dirvish",
-  "folke/neodev.nvim",
+  lspconfig_spec,
 }, {
   change_detection = {
     notify = false,
   },
+})
+
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(ev)
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+    if client.supports_method("textDocument/formatting", ev.buf) then
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        buffer = ev.buf,
+        callback = function()
+          vim.lsp.buf.format()
+        end,
+      })
+    end
+
+    local nmap = function(keys, func)
+      vim.keymap.set("n", keys, func, { buffer = ev.buf, noremap = true })
+    end
+
+    local vmap = function(keys, func)
+      vim.keymap.set("v", keys, func, { buffer = ev.buf, noremap = true })
+    end
+
+    nmap("<leader>r", vim.lsp.buf.rename)
+    nmap("<leader>a", vim.lsp.buf.code_action)
+    nmap("<leader>e", vim.lsp.buf.hover)
+    nmap("gD", vim.lsp.buf.declaration)
+    nmap("gd", require("telescope.builtin").lsp_definitions)
+    nmap("gr", require("telescope.builtin").lsp_references)
+    nmap("gi", require("telescope.builtin").lsp_implementations)
+    nmap("gy", require("telescope.builtin").lsp_type_definitions)
+    vmap("<leader>a", vim.lsp.buf.code_action)
+  end,
 })
 
 local local_file = vim.fn.stdpath("config") .. "/local.lua"
