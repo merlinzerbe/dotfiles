@@ -28,6 +28,7 @@ vim.opt.termguicolors = false                                             -- use
 vim.opt.modeline = false                                                  -- do no parse vim options from comments in files
 vim.opt.guicursor:remove({ "t:block-blinkon500-blinkoff500-TermCursor" }) -- disable cursor blinking in embedded terminal
 vim.g.syntax = false                                                      -- disable regex based syntax highlighting, use treesitter instead
+vim.opt.completeopt = "menu,menuone,noinsert"
 
 vim.cmd("set spelllang=de")
 
