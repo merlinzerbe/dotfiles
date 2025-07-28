@@ -110,8 +110,6 @@ vim.cmd("autocmd FileType python                                setlocal ts=4 et
 vim.cmd("iabbrev rud refactor: update dependencies")
 vim.cmd("iabbrev newvue <script setup lang='ts'><cr><cr></script><cr><cr><template><cr><cr></template>")
 
-vim.cmd.colorscheme("16term")
-
 -- return to the last edited line when reopening a file
 vim.api.nvim_create_autocmd("BufRead", {
   callback = function(opts)
@@ -131,6 +129,24 @@ vim.api.nvim_create_autocmd("BufRead", {
       end,
     })
   end,
+})
+
+-- still show line number when highlighting diagnostics
+vim.diagnostic.config({
+  signs = {
+    text = {
+      [vim.diagnostic.severity.HINT] = "",
+      [vim.diagnostic.severity.INFO] = "",
+      [vim.diagnostic.severity.WARN] = "",
+      [vim.diagnostic.severity.ERROR] = "",
+    },
+    numhl = {
+      [vim.diagnostic.severity.HINT] = "DiagnosticSignHint",
+      [vim.diagnostic.severity.INFO] = "DiagnosticSignInfo",
+      [vim.diagnostic.severity.WARN] = "DiagnosticSignWarn",
+      [vim.diagnostic.severity.ERROR] = "DiagnosticSignError",
+    },
+  }
 })
 
 -- plugins
@@ -430,7 +446,16 @@ local lspconfig_spec = {
       },
     })
 
-    vim.lsp.enable({ "ty", "vtsls", "vue_ls", "gopls", "ruff", "phpactor", "tinymist", "lua_ls" })
+    vim.lsp.enable({
+      "ty",
+      "vtsls",
+      "vue_ls",
+      "gopls",
+      "ruff",
+      "phpactor",
+      "tinymist",
+      "lua_ls",
+    })
 
     local lsp_signature = require("lsp_signature")
     lsp_signature.setup({
@@ -509,11 +534,18 @@ require("lazy").setup({
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(ev)
     local client = vim.lsp.get_client_by_id(ev.data.client_id)
-    if client.supports_method("textDocument/formatting", ev.buf) then
+
+    local allowed_format_client_names = { "null-ls", "lua_ls" }
+
+    if client.supports_method("textDocument/formatting", ev.buf) and vim.tbl_contains(allowed_format_client_names, client.name) then
       vim.api.nvim_create_autocmd("BufWritePre", {
         buffer = ev.buf,
         callback = function()
-          vim.lsp.buf.format()
+          vim.lsp.buf.format({
+            filter = function(format_client)
+              return format_client.name == client.name
+            end
+          })
         end,
       })
     end
