@@ -144,7 +144,7 @@ local highlights = {
   LspReferenceWrite = {},                                                  -- Used for highlighting "write" references
   LspCodeLens = {},                                                        -- Used to color the virtual text of the codelens. See |nvim_buf_set_extmark()|.
   LspCodeLensSeparator = {},                                               -- Used to color the seperator between two or more code lens.
-  LspSignatureActiveParameter = {},                                        -- Used to highlight the active parameter in the signature help. See |vim.lsp.handlers.signature_help()|.
+  LspSignatureActiveParameter = { link = "None" },                         -- Used to highlight the active parameter in the signature help. See |vim.lsp.handlers.signature_help()|.
 
   DiagnosticError = { ctermfg = c.red },                                   -- Used as the base highlight group. Other Diagnostic highlights link to this by default (except Underline)
   DiagnosticWarn = {},                                                     -- Used as the base highlight group. Other Diagnostic highlights link to this by default (except Underline)
