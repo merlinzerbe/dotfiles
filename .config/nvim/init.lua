@@ -28,7 +28,6 @@ vim.opt.termguicolors = false                                             -- use
 vim.opt.modeline = false                                                  -- do no parse vim options from comments in files
 vim.opt.guicursor:remove({ "t:block-blinkon500-blinkoff500-TermCursor" }) -- disable cursor blinking in embedded terminal
 vim.g.syntax = false                                                      -- disable regex based syntax highlighting, use treesitter instead
-vim.opt.completeopt = "menu,menuone,noinsert"                             -- highlight first autocomplete item
 
 vim.cmd("set spelllang=de")
 
@@ -226,6 +225,10 @@ local cmp_spec = {
         expand = function(args)
           luasnip.lsp_expand(args.body)
         end,
+      },
+      ---@diagnostic disable-next-line: missing-fields
+      completion = {
+        completeopt = "menu,menuone,noinsert",
       },
       mapping = cmp.mapping.preset.insert({
         ["<c-space>"] = cmp.mapping.complete(),
