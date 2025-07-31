@@ -106,6 +106,9 @@ vim.cmd("autocmd FileType gdscript                              setlocal ts=2 no
 vim.cmd("autocmd FileType go                                    setlocal ts=4 noet tw=80")
 vim.cmd("autocmd FileType python                                setlocal ts=4 et")
 
+-- fix for php setting noautoindent which is annoying
+vim.cmd("autocmd FileType php                                   setlocal autoindent")
+
 -- abbreviations
 vim.cmd("iabbrev rud refactor: update dependencies")
 vim.cmd("iabbrev newvue <script setup lang='ts'><cr><cr></script><cr><cr><template><cr><cr></template>")
