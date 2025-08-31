@@ -1,22 +1,21 @@
 -- options
-vim.opt.clipboard = "unnamedplus" -- use the system clipboard
-vim.opt.showcmd = false           -- do not show partial commands
-vim.opt.showmode = false          -- do not show the current mode
-vim.opt.number = true             -- show line numbers
-vim.opt.linebreak = true          -- do not split words when wrapping
-vim.opt.lazyredraw = true         -- do not update screen while executing macros
-vim.opt.shiftround = true         -- round indent to multiple of shiftwidth
-vim.opt.ignorecase = true         -- ignore case when searching...
-vim.opt.smartcase = true          -- ... except when capital letters are used
-vim.opt.swapfile = false          -- do not create swapfiles
-vim.opt.undofile = true           -- create undo files
-vim.opt.pumheight = 20            -- use 20 lines in the popupmenu at maximum
-vim.opt.expandtab = true          -- insert spaces when pressing tab
-vim.opt.tabstop = 2               -- use 2 spaces for a tab
-vim.opt.shiftwidth = 0            -- use whatever tabstop is
-vim.opt.softtabstop = -1          -- use whatever shiftwidth is
--- if splitright is set, step into while debugging does not jump to the function
--- vim.opt.splitright = true         -- more intuitive split positions
+vim.opt.clipboard = "unnamedplus"                                         -- use the system clipboard
+vim.opt.showcmd = false                                                   -- do not show partial commands
+vim.opt.showmode = false                                                  -- do not show the current mode
+vim.opt.number = true                                                     -- show line numbers
+vim.opt.linebreak = true                                                  -- do not split words when wrapping
+vim.opt.lazyredraw = true                                                 -- do not update screen while executing macros
+vim.opt.shiftround = true                                                 -- round indent to multiple of shiftwidth
+vim.opt.ignorecase = true                                                 -- ignore case when searching...
+vim.opt.smartcase = true                                                  -- ... except when capital letters are used
+vim.opt.swapfile = false                                                  -- do not create swapfiles
+vim.opt.undofile = true                                                   -- create undo files
+vim.opt.pumheight = 20                                                    -- use 20 lines in the popupmenu at maximum
+vim.opt.expandtab = true                                                  -- insert spaces when pressing tab
+vim.opt.tabstop = 2                                                       -- use 2 spaces for a tab
+vim.opt.shiftwidth = 0                                                    -- use whatever tabstop is
+vim.opt.softtabstop = -1                                                  -- use whatever shiftwidth is
+vim.opt.splitright = true                                                 -- more intuitive split positions
 vim.opt.splitbelow = true                                                 -- more intuitive split positions
 vim.opt.mouse = ""                                                        -- allow select and copy from vim via mouse
 vim.opt.shortmess:append("cI")                                            -- do not show intro on startup
@@ -522,6 +521,47 @@ local markdown_preview_spec = {
   end,
 }
 
+local code_companion_spec = {
+  "olimorris/codecompanion.nvim",
+  opts = {
+    adapters = {
+      http = {
+        llamacpp = function()
+          return require("codecompanion.adapters").extend("openai_compatible", {
+            name = "llamacpp",
+            schema = {
+              model = {
+                default = "qwen2.5-coder:1.5b",
+              },
+              num_ctx = {
+                default = 20000,
+              }
+            },
+            env = {
+              url = "http://127.0.0.1:3000",
+            },
+          })
+        end
+      }
+    },
+    strategies = {
+      chat = {
+        adapter = "llamacpp",
+      },
+      inline = {
+        adapter = "llamacpp",
+      },
+      cmd = {
+        adapter = "llamacpp",
+      },
+    }
+  },
+  dependencies = {
+    "nvim-lua/plenary.nvim",
+    "nvim-treesitter/nvim-treesitter",
+  }
+}
+
 require("lazy").setup({
   cmp_spec,
   treesitter_spec,
@@ -530,6 +570,7 @@ require("lazy").setup({
   mason_spec,
   "justinmk/vim-dirvish",
   lspconfig_spec,
+  code_companion_spec,
 }, {
   change_detection = {
     notify = false,
