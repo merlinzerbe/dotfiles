@@ -75,6 +75,9 @@ k("n", "<c-h>", "<c-w>h", nore)
 k("n", "0", "^", nore)
 k("n", "^", "0", nore)
 
+-- ignore f8 in insert mode (for stt)
+k("i", "<f8>", "<nop>", nore)
+
 -- quit dirvish with <esc> or <leader>q
 vim.api.nvim_command("autocmd FileType dirvish nmap <buffer> <esc> gq")
 vim.api.nvim_command("autocmd FileType dirvish nmap <buffer> <leader>q gq")
