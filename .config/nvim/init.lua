@@ -183,6 +183,7 @@ local mason_spec = {
       "golangci-lint",
       "golines",
       "gopls",
+      "json-lsp",
       "lua-language-server",
       "phpactor",
       "phpcbf",
