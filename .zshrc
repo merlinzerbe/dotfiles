@@ -211,6 +211,8 @@ export PATH=$HOME/.bin:$HOME/.local/bin:$GOPATH/bin:$DOTNETPATH/tools:$HOME/.car
 export JQ_COLORS="1;31:1;31:1;31:1;31:1;32:1;37:1;37"
 
 alias vim=nvim
+# vim secret
+alias vims='nvim -n +"set noswapfile noundofile nobackup nowritebackup"'
 alias e='exit'
 alias z='zathura'
 alias ls='ls --color'
