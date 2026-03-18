@@ -618,9 +618,11 @@ vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(ev)
     local client = vim.lsp.get_client_by_id(ev.data.client_id)
 
-    local allowed_format_client_names = { "null-ls", "lua_ls", "oxfmt" }
+    local allowed_format_client_names = { "null-ls", "lua_ls", "oxfmt", "tinymist" }
 
-    if client.supports_method("textDocument/formatting", ev.buf) and vim.tbl_contains(allowed_format_client_names, client.name) then
+    -- tinymist uses dynamic registration which doesnt work with neovim
+    -- https://github.com/Myriad-Dreamin/tinymist/issues/2039
+    if (client.supports_method("textDocument/formatting", ev.buf) or client.name == "tinymist") and vim.tbl_contains(allowed_format_client_names, client.name) then
       vim.api.nvim_create_autocmd("BufWritePre", {
         buffer = ev.buf,
         callback = function()
