@@ -138,6 +138,9 @@ vim.api.nvim_create_autocmd("BufRead", {
 
 -- still show line number when highlighting diagnostics
 vim.diagnostic.config({
+  float = {
+    source = true, -- Or "if_many"
+  },
   signs = {
     text = {
       [vim.diagnostic.severity.HINT] = "",
@@ -152,6 +155,14 @@ vim.diagnostic.config({
       [vim.diagnostic.severity.ERROR] = "DiagnosticSignError",
     },
   }
+})
+
+-- detect custom filetypes
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+  pattern = "*.d2",
+  callback = function()
+    vim.bo.filetype = "d2"
+  end,
 })
 
 -- plugins
@@ -185,6 +196,8 @@ local mason_spec = {
       "gopls",
       "json-lsp",
       "lua-language-server",
+      "oxfmt",
+      "oxlint",
       "phpactor",
       "phpcbf",
       "phpcs",
@@ -277,24 +290,34 @@ local treesitter_spec = {
         enable = "true",
       },
       ensure_installed = {
+        "bash",
         "go",
-        "lua",
         "javascript",
-        "typescript",
-        "tsx",
-        "vue",
+        "lua",
+        "php",
+        "python",
         "rust",
         "svelte",
         "templ",
-        "php",
+        "tsx",
+        "gdscript",
         "twig",
-        "bash",
+        "typescript",
+        "vue",
+        "dockerfile",
       },
       ts_context_commentstring = {
         enable = true,
       },
     })
   end,
+}
+
+local treesitter_d2_spec = {
+  "ravsii/tree-sitter-d2",
+  dependencies = { "nvim-treesitter/nvim-treesitter" },
+  version = "*", -- use the latest git tag instead of main
+  build = "make nvim-install",
 }
 
 local lspconfig_spec = {
@@ -339,6 +362,19 @@ local lspconfig_spec = {
 
     vim.lsp.config("vtsls", vtsls_config)
 
+    local oxlint_config = {
+      root_markers = {
+        '.oxlintrc.json',
+        '.oxlintrc.jsonc', -- this is not included in the default config
+        'oxlint.config.ts',
+        'package.json',
+        '.git'
+      },
+    }
+
+    vim.lsp.config("oxlint", oxlint_config)
+
+
     local function find_go_modpath()
       local results = vim.fs.find("go.mod", { upward = true })
       if #results == 0 then
@@ -372,29 +408,14 @@ local lspconfig_spec = {
       })
     end
 
-    local function has_eslint_config()
-      local results = vim.fs.find("eslint.config.mjs", { upward = true })
-      if #results == 0 then
-        return false
-      end
-
-      return true
-    end
-
     null_ls.setup({
       sources = {
         -- formatting for python (linting is handled by ruff lsp itself)
         require("none-ls.formatting.ruff"),
 
-        -- format typescript/html/css/vue
-        null_ls.builtins.formatting.prettierd,
-
-        -- lint typescript/html/css/vue
-        -- eslint_d is from none-ls-extras so we have to use require here
-        require("none-ls.diagnostics.eslint_d").with({ condition = has_eslint_config }),
-
         -- runs goimports and then formats while shortening long lines
         null_ls.builtins.formatting.golines,
+
 
         -- gofumpt does stricter formatting than gofmt
         -- unfortunately we cannot use it as a base formatter for golines
@@ -414,6 +435,12 @@ local lspconfig_spec = {
         null_ls.builtins.diagnostics.djlint.with({
           filetypes = { "twig" },
         }),
+
+        -- packer files
+        null_ls.builtins.formatting.packer,
+
+        -- d2 files
+        null_ls.builtins.formatting.d2_fmt,
 
         -- bash scripts
         null_ls.builtins.formatting.shfmt,
@@ -464,6 +491,10 @@ local lspconfig_spec = {
       "phpactor",
       "tinymist",
       "lua_ls",
+      "jsonls",
+      "oxfmt",
+      "oxlint",
+      "gdscript",
     })
 
     local lsp_signature = require("lsp_signature")
@@ -568,6 +599,7 @@ local code_companion_spec = {
 
 require("lazy").setup({
   cmp_spec,
+  treesitter_d2_spec,
   treesitter_spec,
   markdown_preview_spec,
   telescope_spec,
@@ -581,11 +613,12 @@ require("lazy").setup({
   },
 })
 
+-- vim.lsp.log.set_level 'trace'
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(ev)
     local client = vim.lsp.get_client_by_id(ev.data.client_id)
 
-    local allowed_format_client_names = { "null-ls", "lua_ls" }
+    local allowed_format_client_names = { "null-ls", "lua_ls", "oxfmt" }
 
     if client.supports_method("textDocument/formatting", ev.buf) and vim.tbl_contains(allowed_format_client_names, client.name) then
       vim.api.nvim_create_autocmd("BufWritePre", {
