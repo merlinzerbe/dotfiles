@@ -556,47 +556,6 @@ local markdown_preview_spec = {
   end,
 }
 
-local code_companion_spec = {
-  "olimorris/codecompanion.nvim",
-  opts = {
-    adapters = {
-      http = {
-        llamacpp = function()
-          return require("codecompanion.adapters").extend("openai_compatible", {
-            name = "llamacpp",
-            schema = {
-              model = {
-                default = "qwen2.5-coder:1.5b",
-              },
-              num_ctx = {
-                default = 20000,
-              }
-            },
-            env = {
-              url = "http://127.0.0.1:3000",
-            },
-          })
-        end
-      }
-    },
-    strategies = {
-      chat = {
-        adapter = "llamacpp",
-      },
-      inline = {
-        adapter = "llamacpp",
-      },
-      cmd = {
-        adapter = "llamacpp",
-      },
-    }
-  },
-  dependencies = {
-    "nvim-lua/plenary.nvim",
-    "nvim-treesitter/nvim-treesitter",
-  }
-}
-
 require("lazy").setup({
   cmp_spec,
   treesitter_d2_spec,
@@ -606,7 +565,6 @@ require("lazy").setup({
   mason_spec,
   "justinmk/vim-dirvish",
   lspconfig_spec,
-  code_companion_spec,
 }, {
   change_detection = {
     notify = false,
