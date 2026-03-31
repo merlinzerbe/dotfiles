@@ -193,6 +193,7 @@ local mason_spec = {
       "gofumpt",
       "golangci-lint",
       "golines",
+      "goimports",
       "gopls",
       "json-lsp",
       "lua-language-server",
