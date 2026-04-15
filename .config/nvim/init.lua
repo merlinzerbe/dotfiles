@@ -487,7 +487,6 @@ local lspconfig_spec = {
     vim.lsp.enable({
       "ty",
       "vtsls",
-      "vue_ls",
       "gopls",
       "ruff",
       "phpactor",
