@@ -345,6 +345,7 @@ local lspconfig_spec = {
     local vtsls_config = {
       settings = {
         vtsls = {
+          autoUseWorkspaceTsdk = true, -- use ts from node_modules instead of bundled ts
           tsserver = {
             globalPlugins = {
               vue_plugin,
