@@ -269,48 +269,51 @@ local cmp_spec = {
 local treesitter_spec = {
   -- highlight, edit, and navigate code
   "nvim-treesitter/nvim-treesitter",
-  dependencies = {
-    "nvim-treesitter/nvim-treesitter-textobjects",
-    "JoosepAlviste/nvim-ts-context-commentstring", -- set the commentstring based on location in the file
-  },
+  branch = "main",
+  lazy = false,
   build = ":TSUpdate",
+  dependencies = {
+    {
+      "nvim-treesitter/nvim-treesitter-textobjects",
+      branch = "main",
+    },
+  },
   config = function()
-    ---@diagnostic disable-next-line: missing-fields
-    require("nvim-treesitter.configs").setup({
-      textobjects = {
-        select = {
-          enable = true,
-          lookahead = true,
-          keymaps = {
-            ["af"] = "@function.outer",
-            ["if"] = "@function.inner",
-          },
-        },
-      },
-      highlight = {
-        enable = "true",
-      },
-      ensure_installed = {
-        "bash",
-        "go",
-        "javascript",
-        "lua",
-        "php",
-        "python",
-        "rust",
-        "svelte",
-        "templ",
-        "tsx",
-        "gdscript",
-        "twig",
-        "typescript",
-        "vue",
-        "dockerfile",
-      },
-      ts_context_commentstring = {
-        enable = true,
-      },
+    local treesitter = require("nvim-treesitter")
+    treesitter.install({
+      "bash",
+      "css",
+      "dockerfile",
+      "gdscript",
+      "go",
+      "javascript",
+      "lua",
+      "php",
+      "python",
+      "rust",
+      "svelte",
+      "templ",
+      "tsx",
+      "twig",
+      "typescript",
+      "vue",
     })
+
+    vim.api.nvim_create_autocmd("FileType", {
+      callback = function()
+        pcall(vim.treesitter.start)
+      end
+    })
+
+    local ts_select = require("nvim-treesitter-textobjects.select")
+
+    vim.keymap.set({ "x", "o" }, "af", function()
+      ts_select.select_textobject("@function.outer", "textobjects")
+    end)
+
+    vim.keymap.set({ "x", "o" }, "if", function()
+      ts_select.select_textobject("@function.inner", "textobjects")
+    end)
   end,
 }
 
