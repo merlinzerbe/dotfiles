@@ -450,6 +450,9 @@ local lspconfig_spec = {
 
         -- bash scripts
         null_ls.builtins.formatting.shfmt,
+
+        -- c files
+        null_ls.builtins.formatting.clang_format,
       },
     })
 
@@ -500,6 +503,7 @@ local lspconfig_spec = {
       "oxfmt",
       "oxlint",
       "gdscript",
+      "clangd",
     })
 
     local lsp_signature = require("lsp_signature")
