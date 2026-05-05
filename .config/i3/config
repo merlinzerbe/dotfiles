@@ -9,7 +9,6 @@ bindsym $mod+d exec rofi -show run
 bindsym $mod+p exec rofi-pass
 bindsym F11 exec setxkbmap de -option caps:swapescape
 bindsym F10 exec xkbcomp -I$HOME/.config/xkb ~/.config/xkb/map $DISPLAY
-bindsym Menu exec mplayer $HOME/.sound.wav
 
 bindsym $mod+h focus left
 bindsym $mod+j focus down
@@ -108,3 +107,5 @@ exec --no-startup-id picom --config ~/.config/picom/picom.conf -b
 
 # start xoverlay always in a floating window
 for_window [class="overlay"] floating enable
+
+include ~/.config/i3/config.local
