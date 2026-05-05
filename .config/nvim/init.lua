@@ -266,6 +266,22 @@ local cmp_spec = {
   end,
 }
 
+vim.api.nvim_create_autocmd('User', {
+  pattern = 'TSUpdate',
+  callback = function()
+    require('nvim-treesitter.parsers').openscad = {
+      install_info = {
+        url = "https://github.com/openscad/tree-sitter-openscad",
+        files = {
+          "src/parser.c",
+        },
+        revision = "main",
+        queries = 'queries',
+      },
+    }
+  end
+})
+
 local treesitter_spec = {
   -- highlight, edit, and navigate code
   "nvim-treesitter/nvim-treesitter",
@@ -280,6 +296,7 @@ local treesitter_spec = {
   },
   config = function()
     local treesitter = require("nvim-treesitter")
+
     treesitter.install({
       "bash",
       "css",
@@ -297,6 +314,7 @@ local treesitter_spec = {
       "twig",
       "typescript",
       "vue",
+      "openscad",
     })
 
     vim.api.nvim_create_autocmd("FileType", {
@@ -502,6 +520,8 @@ local lspconfig_spec = {
       }
     })
 
+    vim.lsp.config('openscad_lsp', {})
+
     vim.lsp.enable({
       "ty",
       "vtsls",
@@ -515,6 +535,7 @@ local lspconfig_spec = {
       "oxlint",
       "gdscript",
       "clangd",
+      "openscad_lsp",
     })
 
     local lsp_signature = require("lsp_signature")
@@ -596,7 +617,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(ev)
     local client = vim.lsp.get_client_by_id(ev.data.client_id)
 
-    local allowed_format_client_names = { "null-ls", "lua_ls", "oxfmt", "tinymist" }
+    local allowed_format_client_names = { "null-ls", "lua_ls", "oxfmt", "tinymist", "openscad_lsp" }
 
     -- tinymist uses dynamic registration which doesnt work with neovim
     -- https://github.com/Myriad-Dreamin/tinymist/issues/2039
