@@ -165,6 +165,17 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
   end,
 })
 
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+  pattern = "*.alloy",
+  callback = function()
+    vim.bo.filetype = "alloy"
+  end,
+})
+
+-- use hcl for alloy files since the syntax is almost identical and alloy is
+-- not in the official treesitter repo
+vim.treesitter.language.register("hcl", "alloy")
+
 -- plugins
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
@@ -287,6 +298,7 @@ local treesitter_spec = {
       "dockerfile",
       "gdscript",
       "go",
+      "hcl",
       "javascript",
       "lua",
       "php",
@@ -405,6 +417,16 @@ local lspconfig_spec = {
 
     local null_ls = require("null-ls")
 
+    local alloy_source = {
+      method = null_ls.methods.FORMATTING,
+      filetypes = { "alloy" },
+      generator = null_ls.formatter({
+        command = "alloy",
+        args = { "fmt", "-" },
+        to_stdin = true,
+      })
+    }
+
     local gofumpt_source = null_ls.builtins.formatting.gofumpt
     if go_modpath ~= nil then
       -- gofumpt considers the modpath when grouping imports and we want to
@@ -429,6 +451,8 @@ local lspconfig_spec = {
         -- https://github.com/segmentio/golines/issues/100
         -- so we run it afterwards and format the file twice
         gofumpt_source,
+
+        alloy_source,
 
         null_ls.builtins.diagnostics.golangci_lint,
 
