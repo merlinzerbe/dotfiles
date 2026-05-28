@@ -298,6 +298,7 @@ local treesitter_spec = {
       "rust",
       "svelte",
       "templ",
+      "terraform",
       "tsx",
       "twig",
       "typescript",
@@ -438,6 +439,8 @@ local lspconfig_spec = {
         gofumpt_source,
 
         alloy_source,
+
+        null_ls.builtins.formatting.opentofu_fmt,
 
         null_ls.builtins.diagnostics.golangci_lint,
 
