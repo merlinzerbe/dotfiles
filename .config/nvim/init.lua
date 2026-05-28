@@ -157,14 +157,6 @@ vim.diagnostic.config({
   }
 })
 
--- detect custom filetypes
-vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
-  pattern = "*.d2",
-  callback = function()
-    vim.bo.filetype = "d2"
-  end,
-})
-
 vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
   pattern = "*.alloy",
   callback = function()
@@ -330,13 +322,6 @@ local treesitter_spec = {
   end,
 }
 
-local treesitter_d2_spec = {
-  "ravsii/tree-sitter-d2",
-  dependencies = { "nvim-treesitter/nvim-treesitter" },
-  version = "*", -- use the latest git tag instead of main
-  build = "make nvim-install",
-}
-
 local lspconfig_spec = {
   "neovim/nvim-lspconfig",
   dependencies = {
@@ -470,9 +455,6 @@ local lspconfig_spec = {
         -- packer files
         null_ls.builtins.formatting.packer,
 
-        -- d2 files
-        null_ls.builtins.formatting.d2_fmt,
-
         -- bash scripts
         null_ls.builtins.formatting.shfmt,
 
@@ -603,7 +585,6 @@ local markdown_preview_spec = {
 
 require("lazy").setup({
   cmp_spec,
-  treesitter_d2_spec,
   treesitter_spec,
   markdown_preview_spec,
   telescope_spec,
