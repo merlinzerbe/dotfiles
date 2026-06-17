@@ -605,7 +605,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(ev)
     local client = vim.lsp.get_client_by_id(ev.data.client_id)
 
-    local allowed_format_client_names = { "null-ls", "lua_ls", "oxfmt", "tinymist" }
+    local allowed_format_client_names = { "null-ls", "lua_ls", "oxfmt", "tinymist", "typelang" }
 
     -- tinymist uses dynamic registration which doesnt work with neovim
     -- https://github.com/Myriad-Dreamin/tinymist/issues/2039
