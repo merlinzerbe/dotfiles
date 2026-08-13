@@ -526,6 +526,7 @@ local lspconfig_spec = {
       "oxlint",
       "gdscript",
       "clangd",
+      "vue_ls",
     })
 
     local lsp_signature = require("lsp_signature")
