@@ -376,6 +376,9 @@ local lspconfig_spec = {
         'package.json',
         '.git'
       },
+      settings = {
+        fixKind = "all",
+      },
     }
 
     vim.lsp.config("oxlint", oxlint_config)
@@ -600,6 +603,27 @@ require("lazy").setup({
   change_detection = {
     notify = false,
   },
+})
+
+-- autofixing for oxlint requires us to call the oxc.fixAll command manually
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = { "*.js", "*.ts", "*.vue" },
+  group = vim.api.nvim_create_augroup("OxlintFixOnSave", { clear = true }),
+  callback = function(ev)
+    local client = vim.lsp.get_clients({ name = "oxlint", bufnr = ev.buf })[1]
+    if not client then
+      return
+    end
+
+    local result = client:request_sync("workspace/executeCommand", {
+      command = "oxc.fixAll",
+      arguments = { { uri = vim.uri_from_bufnr(ev.buf) } },
+    }, 1000, ev.buf)
+
+    if result and result.err then
+      vim.notify(result.err.message, vim.log.levels.ERROR)
+    end
+  end,
 })
 
 -- vim.lsp.log.set_level 'trace'
