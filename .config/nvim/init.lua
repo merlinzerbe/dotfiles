@@ -366,6 +366,7 @@ local lspconfig_spec = {
     }
 
     vim.lsp.config("vtsls", vtsls_config)
+    vim.lsp.config("vue_ls", {})
 
     local oxlint_config = {
       root_markers = {
