@@ -447,7 +447,11 @@ local lspconfig_spec = {
 
         null_ls.builtins.formatting.opentofu_fmt,
 
-        null_ls.builtins.diagnostics.golangci_lint,
+        null_ls.builtins.diagnostics.golangci_lint.with({
+          -- null_ls builtin config is for golangci-lint v1 so we need to
+          -- override the args for v2
+          args = { "run", "--fix=false", "--show-stats=false", "--output.json.path=stdout" },
+        }),
 
         -- format/autofix php files
         null_ls.builtins.formatting.phpcbf,
