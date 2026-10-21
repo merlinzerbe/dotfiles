@@ -345,6 +345,16 @@ local lspconfig_spec = {
       enableForWorkspaceTypeScriptVersions = true,
     }
 
+    local function allows_ts_extensions(root_dir)
+      local f = io.open(root_dir .. "/tsconfig.json", "r")
+      if not f then
+        return false
+      end
+      local text = f:read("*a")
+      f:close()
+      return text:find('"allowImportingTsExtensions"%s*:%s*true') ~= nil
+    end
+
     local vtsls_config = {
       settings = {
         vtsls = {
@@ -363,6 +373,13 @@ local lspconfig_spec = {
         "typescriptreact",
         "vue",
       },
+      before_init = function(_, config)
+        if config.root_dir and allows_ts_extensions(config.root_dir) then
+          config.settings.typescript = vim.tbl_deep_extend("force", config.settings.typescript or {}, {
+            preferences = { importModuleSpecifierEnding = "js" },
+          })
+        end
+      end,
     }
 
     vim.lsp.config("vtsls", vtsls_config)
