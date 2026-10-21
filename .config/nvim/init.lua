@@ -365,7 +365,6 @@ local lspconfig_spec = {
             },
           },
         },
-        typescript = {}, -- tsdk is set in before_init
       },
       filetypes = {
         "typescript",
@@ -375,25 +374,10 @@ local lspconfig_spec = {
         "vue",
       },
       before_init = function(_, config)
-        local root = config.root_dir
-
-        -- only fall back to system TS when the project has no local copy
-        -- (searches upward, so monorepos with hoisted node_modules work too)
-        local has_local_ts = root
-            and #vim.fs.find("node_modules/typescript/lib", {
-              path = root,
-              upward = true,
-              type = "directory",
-            }) > 0
-
-        if not has_local_ts then
-          config.settings.typescript.tsdk = "/usr/lib/node_modules/typescript/lib"
-        end
-
         if config.root_dir and allows_ts_extensions(config.root_dir) then
-          config.settings.typescript.preferences = {
-            importModuleSpecifierEnding = "js",
-          }
+          config.settings.typescript = vim.tbl_deep_extend("force", config.settings.typescript or {}, {
+            preferences = { importModuleSpecifierEnding = "js" },
+          })
         end
       end,
     }
