@@ -662,7 +662,15 @@ vim.api.nvim_create_autocmd("LspAttach", {
     end
 
     nmap("<leader>r", vim.lsp.buf.rename)
-    nmap("<leader>a", vim.lsp.buf.code_action)
+
+    nmap("<leader>a", function()
+      vim.lsp.buf.code_action({
+        filter = function(action)
+          return not action.disabled
+        end,
+      })
+    end)
+
     nmap("<leader>e", vim.lsp.buf.hover)
     nmap("gD", vim.lsp.buf.declaration)
     nmap("gd", require("telescope.builtin").lsp_definitions)
