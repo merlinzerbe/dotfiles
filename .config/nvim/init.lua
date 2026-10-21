@@ -293,6 +293,8 @@ local treesitter_spec = {
       "hcl",
       "javascript",
       "lua",
+      "markdown",
+      "markdown_inline",
       "php",
       "python",
       "rust",
