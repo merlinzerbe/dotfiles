@@ -113,7 +113,6 @@ vim.cmd("autocmd FileType python                                setlocal ts=4 et
 vim.cmd("autocmd FileType php                                   setlocal autoindent")
 
 -- abbreviations
-vim.cmd("iabbrev rud refactor: update dependencies")
 vim.cmd("iabbrev newvue <script setup lang='ts'><cr><cr></script><cr><cr><template><cr><cr></template>")
 
 -- return to the last edited line when reopening a file
