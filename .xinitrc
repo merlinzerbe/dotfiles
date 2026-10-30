@@ -1,2 +1,3 @@
 #!/usr/bin/env sh
-exec dbus-launch i3
+dbus-update-activation-environment --systemd DISPLAY XAUTHORITY
+exec i3
